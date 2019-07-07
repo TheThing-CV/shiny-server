@@ -8,6 +8,10 @@ library('ggradar')
 library('dplyr')
 library('scales')
 library('tibble')
+library('readxl')
+library('DT')
+library('pastecs')
+
 
 
 function(input, output, session) {
@@ -15,6 +19,52 @@ function(input, output, session) {
   
   selected_data <- reactive({
     iris[, c(input$x, input$y)]
+  })
+  
+  iris_data <- reactive({
+    iris
+  })
+  
+  data <- reactive({
+    file_to_read <- input$file_upload
+    
+    if(is.null(file_to_read))
+      return()
+    
+    temp <- read_excel(file_to_read$datapath)
+    temp <- mutate_if(temp, is.character, as.factor)
+    temp
+  })
+  
+  output$data <- DT::renderDataTable({
+    
+      DT::datatable(data())     
+      
+   
+   
+   
+    
+    
+  })
+  
+  output$summary <- renderPrint({
+    
+    file_to_read <- input$file_upload
+    
+    if(is.null(file_to_read))
+      return()
+    
+    summary(data()) 
+  })
+  
+  output$summary2 <- renderPrint({
+    file_to_read <- input$file_upload
+    
+    if(is.null(file_to_read))
+      return()
+    
+    temp <- select_if(data(), is.numeric)
+    round(stat.desc(temp, norm = T), 3) 
   })
   
   observeEvent(input$button_1, {
