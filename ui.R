@@ -35,14 +35,14 @@ fluidPage(
   sidebarPanel(useShinyjs(), 
     
       fileInput('file_upload', 'Upload your data', accept=c("excel", "excel files", ".xlsx")) %>% helper(content = "upload_file", colour = 'steelblue'),
+      # selectInput('theme_input', 'Select plot theme', choices = c('minimal', 'grey', 'classic', 'void')),
       box(id = 'summary_box', width = 800, 
         checkboxInput('summary_check', 'Show basic descriptive stats?') %>% helper(content = 'basic_desc', colour = 'steelblue'),
         checkboxInput('summary2_check', 'Show advanced descriptive stats?') %>% helper(content = 'adv_desc', colour = 'steelblue'),
         checkboxInput('contingency_check', 'Show contingency table?', value=T) %>% helper(content = 'contingency_check', colour = 'steelblue'),
         selectInput('contingency_columns', 'Specify factors for contingency table calculations', choices = NULL, multiple = T) %>% helper(content = 'contingency_factors', colour = 'steelblue')
       ),
-      tags$hr(),
-      
+     
       box(id='plot_type', width=800, 
         selectInput('plot_type', 'Select plot type', c('Histogram', 'Boxplot', 'Violin plot',  'Barplot', "Lollipop plot", 'Lineplot', 'Scatter plot', 'Scatter margin plot', 'Pie plot', 'Donut plot', 'Contingency table', 'Tableplot', 'Genomeplot', 'Cluster plot', 'Independent t-test',  'Paired t-test', 'Correlation plot', 'Radar plot')),
         uiOutput('x'),
@@ -53,6 +53,8 @@ fluidPage(
         uiOutput('orientation'),
         
         selectInput('pallete', 'Select color pallete for grouping variable', choices = c('npg', 'aaas', 'lancet', 'jco', 'ucscgb', 'uchicago', 'simpsons', 'rickandmorty')),
+        radioButtons('color_fill_radio', 'Select method to draw boxplots with?', choices = c('color', 'fill'), inline = T),
+        radioButtons('stat_method_radio', 'Select statistical method to use?', choices = c('Anova', 'Kruskal-Wallis', 'Student t-test', 'Wilcoxon test'), inline = T),
         checkboxInput('add_jitter', 'Add data points to plot?', value = F),
         
         box(id = 'histogram_checks', width = 800, 

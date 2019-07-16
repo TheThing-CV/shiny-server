@@ -212,6 +212,7 @@ function(input, output, session) {
         shinyjs::hide('custom_colour')
         shinyjs::hide('histogram_checks')
         shinyjs::show('add_jitter')
+        shinyjs::show('color_fill_radio')
         
         # shinyjs::show("download_i_graph")
         # 
@@ -220,16 +221,21 @@ function(input, output, session) {
         temp <- drop_na(data())
         
         # my_comparisons <- list( c("setosa", "versicolor"), c("versicolor", "virginica"), c("setosa", "virginica"))
-        p <- ggboxplot(temp, x = input$x_group, y = input$x_var,  color = if(input$by_group != 'None') input$by_group else input$x_group, palette = input$pallete,
-                  add = if(input$add_jitter) 'jitter' else NA, xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal(),  orientation = input$box_orientation) 
+        
+        if(input$color_fill_radio == 'color')
+            p <- ggboxplot(temp, x = input$x_group, y = input$x_var,  color = if(input$by_group != 'None') input$by_group else input$x_group, palette = input$pallete,
+                 add = if(input$add_jitter) 'jitter' else NA, xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal(),  orientation = input$box_orientation) 
+        else 
+            p <- ggboxplot(temp, x = input$x_group, y = input$x_var,  fill = if(input$by_group != 'None') input$by_group else input$x_group, palette = input$pallete,
+                 add = if(input$add_jitter) 'jitter' else NA, xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal(),  orientation = input$box_orientation) 
+        
         p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
           font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
-        ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black'))
+        ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
         
-        # + 
-        #   stat_compare_means(method='anova'
-        #                      # , label.y=6.5
-        #                      ) + 
+        p + stat_compare_means(method = switch(input$stat_method_radio, 'Anova' = 'anova', 'Kruskal-Wallis' = 'kruskal.test', 'Student t-test' = 't.test', 'Wilcoxon test' = 'wilcox.test'), size = input$annotate_size
+                             # , label.y=6.5
+                             )
         #   stat_compare_means(
         #     # comparisons = my_comparisons
         #     )
@@ -250,6 +256,7 @@ function(input, output, session) {
       shinyjs::show('custom_colour')
       shinyjs::show('histogram_checks')
       shinyjs::hide('add_jitter')
+      shinyjs::hide('color_fill_radio')
       
       
       temp <- drop_na(data())
@@ -269,10 +276,21 @@ function(input, output, session) {
         p <- ggdensity(temp, x = input$x_var, fill = if(input$by_group != 'None') input$by_group else input$custom_colour, bins = input$bins_slider, palette = input$pallete,
                        add = "mean", rug = TRUE, xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal()) +
         annotate("text", x=Inf, y = Inf, label = if(input$by_group == 'None' && input$shapiro_check) disp else '', vjust=1, hjust=1, size = input$annotate_size)
-      
+     
+      #  if(input$theme_input == 'minimal')
+      #   p <- p + theme_minimal()
+      # else if(input$theme_input == 'grey')
+      #   p <- p + theme_grey()
+      # else if(input$theme_input == 'classic')
+      #   p <- p + theme_classic()
+      # else if(input$theme_input == 'void')
+      #   p <- p + theme_void()
       
       p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
         font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+      
+      p <- ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black'))
+      
       
       if(input$faceting && input$by_group != 'None')
         facet(p, facet.by = input$by_group)
