@@ -11,14 +11,63 @@ library('tibble')
 library('readxl')
 library('DT')
 library('pastecs')
-
-
+library('janitor')
+library('tidyr')
+library('colourpicker')
+library('shinyjs')
 
 function(input, output, session) {
+  
+  shinyjs::show("main_params")
+  shinyjs::hide("title_labels")
+  shinyjs::hide("plotly")
+  shinyjs::hide("download_i_graph")
+  shinyjs::hide('download_box')
+  
   session_store <- reactiveValues()
   
-  selected_data <- reactive({
-    iris[, c(input$x, input$y)]
+  observe_helpers(withMathJax = TRUE, help_dir = "helper_mds")
+
+  observe({
+    if(input$tabs == 'data_check')
+      {
+        shinyjs::hide('plot_type')
+        shinyjs::show('contingency_columns')
+        shinyjs::show('summary_box')
+        shinyjs::hide('title_labels')
+        shinyjs::hide('download_box')
+      }
+    else
+    {
+      shinyjs::show('plot_type')
+      shinyjs::hide('contingency_columns')
+      shinyjs::hide('summary_box')
+    }
+    
+    if(input$summary_check)
+      shinyjs::show('summary')
+    else
+      shinyjs::hide('summary')
+    
+    if(input$summary2_check)
+      shinyjs::show('summary2')
+    else
+      shinyjs::hide('summary2')
+    
+    if(input$contingency_check)
+      shinyjs::show('contingency_table')
+    else
+      shinyjs::hide('contingency_table')
+    
+    x_even <- input$density_check %% 2 == 0
+    
+    updateCheckboxInput(session, "density_instead_check", value = if(input$density_check == F) F else x_even)
+    
+  })
+  
+ 
+  contingency_data <- reactive({
+    starwars
   })
   
   iris_data <- reactive({
@@ -33,12 +82,17 @@ function(input, output, session) {
     
     temp <- read_excel(file_to_read$datapath)
     temp <- mutate_if(temp, is.character, as.factor)
+    updateSelectInput(session, 'contingency_columns', choices = names(select_if(temp, is.factor)))
+    
     temp
   })
   
   output$data <- DT::renderDataTable({
     
-      DT::datatable(data())     
+      DT::datatable(data(), options = list( initComplete = JS(
+        "function(settings, json) {",
+        "$(this.api().table().header()).css({'background-color': '#719de3', 'color': '#fff'});",
+        "}"), searchHighlight = TRUE, pageLength = 10, width="100%", scrollX = TRUE, lengthMenu = list(c(5, 10, 20, 50, -1), c('5', '10', '20', '50', 'All'))))     
       
    
    
@@ -67,15 +121,27 @@ function(input, output, session) {
     round(stat.desc(temp, norm = T), 3) 
   })
   
+  output$contingency_table <- renderPrint({
+    if(!is.null(input$contingency_columns))
+      ftable(data()[, input$contingency_columns])
+  })
+  
   observeEvent(input$button_1, {
-    shinyjs::show("main_params")
+    shinyjs::show("plot_type")
     shinyjs::hide("title_labels")
+    shinyjs::hide('download_box')
   })
   observeEvent(input$button_2, {
     shinyjs::show("title_labels")
-    shinyjs::hide("main_params")
+    shinyjs::hide("plot_type")
+    shinyjs::hide('download_box')
     
-    
+  })
+  
+  observeEvent(input$download_button, {
+    shinyjs::hide("plot_type")
+    shinyjs::hide("title_labels")
+    shinyjs::show('download_box')
   })
   
  
@@ -84,50 +150,166 @@ function(input, output, session) {
   shinyjs::hide("title_labels")
   shinyjs::hide("plotly")
   shinyjs::hide("download_i_graph")
-
-  output$plot_1 <- renderPlot({
+  shinyjs::hide('download_box')
+  
+  output$x <- renderUI({
+    if(is.null(data()))
+      return();
+    
+    
+    if(input$plot_type == 'Histogram' || input$plot_type == 'Boxplot'){
+      selectInput('x_var', 'Select variable to plot', choices = names(select_if(data(), is.numeric)))
+      
+    }
+    
+    })
+  
+  output$y <- renderUI({
+    if(is.null(data()))
+      return();
+    
+    if(input$plot_type == 'Histogram'){
+      selectInput('by_group', 'Select grouping variable', choices = c('None', names(select_if(data(), is.factor))))
+    }
+    
+    else if (input$plot_type == 'Boxplot'){
+      selectInput('x_group', 'Select grouping variable', choices = c(names(select_if(data(), is.factor))))
+    }
+  })
+  
+  output$z <- renderUI({
+    if(is.null(data()))
+      return();
+    if (input$plot_type == 'Boxplot'){
+      selectInput('by_group', 'Select additional grouping variable', choices = c('None', names(select_if(data(), is.factor))))
+    }
+    
+  })
+  
+  output$orientation <- renderUI({
+    if(is.null(data()))
+      return();
+    
+    if (input$plot_type == 'Boxplot'){
+      selectInput('box_orientation', 'Select orientation', choices = c('vertical', 'horizontal'))
+    }
+  })
+  
+  plotInput <- reactive({
+    if(is.null(data()))
+      return();
+    
     x_label <- if(input$x_label != '') input$x_label else NULL
     y_label <- if(input$y_label != '') input$y_label else NULL
     plot_title <- if(input$plot_title != '') input$plot_title else NULL
     
-    if(input$plot_type == 'Boxplot') {
-      shinyjs::show("download_i_graph")
-      
-      shinyjs::show('plotly')
-      my_comparisons <- list( c("setosa", "versicolor"), c("versicolor", "virginica"), c("setosa", "virginica"))
-      ggboxplot(selected_data(), x = input$x, y = input$y, color = input$x, 
-                add = 'jitter', xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal()) + 
-                  stat_compare_means(method='anova', label.y=6.5) + 
-                  stat_compare_means(comparisons = my_comparisons)
+    ##############################################################################################################
+    ###########################################   BOXPLOT  #######################################################
+    ##############################################################################################################
+    
+      if(input$plot_type == 'Boxplot') {
+        shinyjs::hide('bins_slider')
+        shinyjs::hide('custom_colour')
+        shinyjs::hide('histogram_checks')
+        shinyjs::show('add_jitter')
+        
+        # shinyjs::show("download_i_graph")
+        # 
+        # shinyjs::show('plotly')
+        
+        temp <- drop_na(data())
+        
+        # my_comparisons <- list( c("setosa", "versicolor"), c("versicolor", "virginica"), c("setosa", "virginica"))
+        p <- ggboxplot(temp, x = input$x_group, y = input$x_var,  color = if(input$by_group != 'None') input$by_group else input$x_group, palette = input$pallete,
+                  add = if(input$add_jitter) 'jitter' else NA, xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal(),  orientation = input$box_orientation) 
+        p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
+          font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+        ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black'))
+        
+        # + 
+        #   stat_compare_means(method='anova'
+        #                      # , label.y=6.5
+        #                      ) + 
+        #   stat_compare_means(
+        #     # comparisons = my_comparisons
+        #     )
     } 
     
-    else if(input$plot_type == 'Densityplot') {
-        shinyjs::hide("download_i_graph")
+    ##############################################################################################################
+    ###########################################   END BOXPLOT  ###################################################
+    ##############################################################################################################
+    
+    ##############################################################################################################
+    ###########################################   HISTOGRAM  #####################################################
+    ##############################################################################################################
+    
+    else if(input$plot_type == 'Histogram') {
+      shinyjs::hide("download_i_graph")
+      shinyjs::hide("plotly")
+      shinyjs::show('bins_slider')
+      shinyjs::show('custom_colour')
+      shinyjs::show('histogram_checks')
+      shinyjs::hide('add_jitter')
       
+      
+      temp <- drop_na(data())
+      col <- input$x_var
 
-         shinyjs::hide("plotly")
-        p <- ggdensity(selected_data(), x = input$y,
-                  add = "mean", rug = TRUE,
-                  color = input$x, fill = input$x, xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal())
-        p
+      res <- shapiro.test(data()[[col]])
+      disp <- paste0('Shapiro-Wilk normality: ', round(res$statistic, 4),  '; p-value: ', round(res$p.value, 4))
+
       
+      if(!input$density_instead_check){
+        p <- gghistogram(temp, x = input$x_var, fill = if(input$by_group != 'None') input$by_group else input$custom_colour, bins = input$bins_slider, palette = input$pallete,
+                         add = "mean", add_density = input$density_check, rug = TRUE, xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal()) + 
+          annotate("text", x=Inf, y = Inf, label = if(input$by_group == 'None' && input$shapiro_check) disp else '', vjust=1, hjust=1, size = input$annotate_size) 
+      }
+      
+      else
+        p <- ggdensity(temp, x = input$x_var, fill = if(input$by_group != 'None') input$by_group else input$custom_colour, bins = input$bins_slider, palette = input$pallete,
+                       add = "mean", rug = TRUE, xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal()) +
+        annotate("text", x=Inf, y = Inf, label = if(input$by_group == 'None' && input$shapiro_check) disp else '', vjust=1, hjust=1, size = input$annotate_size)
+      
+      
+      p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
+        font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+      
+      if(input$faceting && input$by_group != 'None')
+        facet(p, facet.by = input$by_group)
+      else
+        p 
     }
+    
+    ##############################################################################################################
+    ###########################################   END HISTOGRAM  #################################################
+    ##############################################################################################################
+    
+    
+    ##############################################################################################################
+    ###########################################   VIOLIN  ########################################################
+    ##############################################################################################################
     
     else if(input$plot_type == 'Violin plot') {
       shinyjs::hide("download_i_graph")
       
-
+      
       shinyjs::hide("plotly")
       ggviolin(ToothGrowth, "dose", "len", fill = "supp",
                palette = "jco", 
-                add.params = list(fill = "white"))
+               add.params = list(fill = "white"))
     }
     
+    ##############################################################################################################
+    ###########################################   END VIOLIN  ####################################################
+    ##############################################################################################################
     
+    
+    ##############################################################################################################
+    ###########################################   BARPLOT  #######################################################
+    ##############################################################################################################
     else if(input$plot_type == 'Barplot') {
       shinyjs::hide("download_i_graph")
       
-
       shinyjs::hide("plotly")
       ggbarplot(ToothGrowth, x = "dose", y = "len", add = "mean_se",
                 color = "supp", palette = "jco", fill = 'supp',
@@ -135,10 +317,14 @@ function(input, output, session) {
         stat_compare_means(aes(group = supp), label = "p.signif", label.y = 29)    
     } 
     
+    ##############################################################################################################
+    ###########################################   END BARPLOT  ###################################################
+    ##############################################################################################################
+    
     else if(input$plot_type == 'Lollipop plot') {
       shinyjs::hide("download_i_graph")
       
-
+      
       shinyjs::hide("plotly")
       dfm <- mtcars
       dfm$cyl <- as.factor(dfm$cyl)
@@ -155,7 +341,7 @@ function(input, output, session) {
     else if(input$plot_type == 'Lineplot') {
       shinyjs::hide("download_i_graph")
       
-
+      
       shinyjs::hide("plotly")
       ggline(ToothGrowth, x = "dose", y = "len", add = "mean_se",
              color = "supp", palette = "jco", size=.8)+
@@ -166,7 +352,7 @@ function(input, output, session) {
     else if(input$plot_type == 'Contingency table') {
       shinyjs::hide("download_i_graph")
       
-
+      
       shinyjs::hide("plotly")
       data <- read.delim(
         system.file("demo-data/housetasks.txt", package = "ggpubr"),
@@ -179,7 +365,7 @@ function(input, output, session) {
     else if(input$plot_type == 'Tableplot'){
       shinyjs::hide("download_i_graph")
       
-
+      
       shinyjs::hide("plotly")
       stable <- desc_statby(iris, measure.var = input$y,
                             grps = input$x)
@@ -193,7 +379,7 @@ function(input, output, session) {
     else if(input$plot_type == 'Genomeplot') {
       shinyjs::hide("download_i_graph")
       
-
+      
       shinyjs::hide("plotly")
       ggmaplot(diff_express, main = expression("Group 1" %->% "Group 2"),
                fdr = 0.05, fc = 2, size = 0.4,
@@ -209,7 +395,7 @@ function(input, output, session) {
     else if(input$plot_type == 'Cluster plot') {
       shinyjs::hide("download_i_graph")
       
-
+      
       shinyjs::hide("plotly")
       hc <- hclust(dist(USArrests), "ave")
       ggdendrogram(hc, rotate = FALSE, size = 2)
@@ -218,7 +404,7 @@ function(input, output, session) {
     else if(input$plot_type == 'Independent t-test') {
       shinyjs::hide("download_i_graph")
       
-
+      
       shinyjs::hide("plotly")
       p <- ggboxplot(ToothGrowth, x = "supp", y = "len",
                      color = "supp", palette = "jco",
@@ -231,7 +417,7 @@ function(input, output, session) {
     else if(input$plot_type == 'Paired t-test') {
       shinyjs::hide("download_i_graph")
       
-
+      
       shinyjs::hide("plotly")
       ggpaired(ToothGrowth, x = "supp", y = "len",
                color = "supp", line.color = "gray", line.size = 0.4,
@@ -242,7 +428,7 @@ function(input, output, session) {
     else if(input$plot_type == 'Correlation plot') {
       shinyjs::hide("download_i_graph")
       
-
+      
       shinyjs::hide("plotly")
       corr <- round(cor(mtcars), 1)
       p.mat <- cor_pmat(mtcars)
@@ -253,7 +439,7 @@ function(input, output, session) {
     else if(input$plot_type == 'Scatter plot') {
       shinyjs::hide("download_i_graph")
       
-
+      
       shinyjs::hide("plotly")
       df <- mtcars
       df$cyl <- as.factor(df$cyl)
@@ -270,7 +456,7 @@ function(input, output, session) {
     else if(input$plot_type == 'Scatter margin plot') {
       shinyjs::hide("download_i_graph")
       
-
+      
       shinyjs::hide("plotly")
       ggscatterhist(
         iris, x = "Sepal.Length", y = "Sepal.Width",
@@ -283,7 +469,7 @@ function(input, output, session) {
     else if(input$plot_type == 'Pie plot') {
       shinyjs::hide("download_i_graph")
       
-
+      
       shinyjs::hide("plotly")
       df <- data.frame(
         group = c("Male", "Female", "Child"),
@@ -298,7 +484,7 @@ function(input, output, session) {
     else if(input$plot_type == 'Donut plot') {
       shinyjs::hide("download_i_graph")
       
-
+      
       shinyjs::hide("plotly")
       df <- data.frame(
         group = c("Male", "Female", "Child"),
@@ -322,12 +508,23 @@ function(input, output, session) {
       ggradar(mtcars_radar)
     }
     
-   
-     
+  })
+
+  output$plot_1 <- renderPlot({
+    width_i = strtoi(input$plot_width)
+    height_i = strtoi(input$plot_height)
+    dpi_i = strtoi(input$plot_dpi)
     
+    if(input$format_radio == '.pdf'){
+      pdf("ggplot.pdf", width = width_i, height = height_i)
+      print(plotInput())
+      dev.off()
+    }
+    else {
+      ggsave("ggplot.png", plotInput(),  width = width_i, height = height_i, dpi = dpi_i, units = "in")
+    }
     
-    
-    
+    print(plotInput())
   })
   
   output$plot_2 <- renderPlotly({
@@ -340,8 +537,8 @@ function(input, output, session) {
       session_store$plt
     }
    
-    
   })
+  
   
   output$download_i_graph <- downloadHandler(
     filename = function() {
@@ -350,6 +547,18 @@ function(input, output, session) {
     content = function(file) {
       # export plotly html widget as a temp file to download.
       saveWidget(as_widget(session_store$plt), file, selfcontained = TRUE)
+    }
+  )
+  
+  output$downloadPlot <- downloadHandler(
+    filename = function() {
+      if(input$format_radio == '.pdf')
+        'ggplot.pdf'
+      else
+        'ggplot.png'
+    },
+    content = function(file) {
+      file.copy(if(input$format_radio == '.pdf') 'ggplot.pdf' else 'ggplot.png', file, overwrite=TRUE)
     }
   )
   
