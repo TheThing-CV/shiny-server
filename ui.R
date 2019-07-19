@@ -50,15 +50,21 @@ fluidPage(
         colourpicker::colourInput('custom_colour', 'Select custom colour', '#5D4E73'),
         uiOutput('y'),
         uiOutput('z'),
+        checkboxInput('faceting', 'Use faceting for grouping variable?', value = F),
+        
         uiOutput('orientation'),
+        uiOutput('order'),
         
         selectInput('pallete', 'Select color pallete for grouping variable', choices = c('npg', 'aaas', 'lancet', 'jco', 'ucscgb', 'uchicago', 'simpsons', 'rickandmorty')),
         radioButtons('color_fill_radio', 'Select method to draw boxplots with?', choices = c('color', 'fill'), inline = T),
+        radioButtons('add_geoms_radio', 'Select additional elements to plot', choices = c('Boxplot' = 'boxplot', 'Points' = 'jitter', 'Mean/SE' = 'mean_se', 'Mean/SD' = 'mean_sd', 'None' = NA), inline = T),
+        checkboxInput('boxplot_stat_check', 'Add statistical tests to the plot?', value = T),
         radioButtons('stat_method_radio', 'Select statistical method to use?', choices = c('Anova', 'Kruskal-Wallis', 'Student t-test', 'Wilcoxon test'), inline = T),
+        radioButtons('multiple_adj_radio', 'Select multiple comparisons adjustment method', choices = c('Holm' = 'holm', 'Hochberg' = 'hochberg', 'Hommel' = 'hommel', 'Bonferroni' = 'bonferroni', 'FDR' = 'fdr'), inline = T),
+        
         checkboxInput('add_jitter', 'Add data points to plot?', value = F),
         
         box(id = 'histogram_checks', width = 800, 
-        checkboxInput('faceting', 'Use faceting for grouping variable?', value = F),
         checkboxInput('density_check', 'Add density to histogram?'),
         checkboxInput('density_instead_check', 'Use density plot instead of histogram?'),
         checkboxInput('shapiro_check', 'Add Shapiro-Wilk normality test? (single histogram only)', value = T)
@@ -74,9 +80,9 @@ fluidPage(
         sliderInput('legend_slider', 'Select legend font size', min = 5, max = 25, value = 12)
         ),
     box(id = 'download_box', width = 800,
-        selectInput('plot_width', 'Select plot width', choices = c('5 inches' = 5, '8 inches' = 8, '10 inches' = 10, '12 inches' = 12, '15 inches' = 15)),
-        selectInput('plot_height', 'Select plot height', choices = c('5 inches' = 5, '8 inches' = 8, '10 inches' = 10, '12 inches' = 12, '15 inches' = 15)),
-        selectInput('plot_dpi', 'Please select plot quality (DPI)', choices = c('Low, 72dpi' = 72, 'High, 300dpi' = 300, 'Very high, 400dpi' = 400)),
+        selectInput('plot_width', 'Select plot width', choices = c('5 inches' = 5, '8 inches' = 8, '10 inches' = 10, '12 inches' = 12, '15 inches' = 15), selected = 10),
+        selectInput('plot_height', 'Select plot height', choices = c('5 inches' = 5, '8 inches' = 8, '10 inches' = 10, '12 inches' = 12, '15 inches' = 15), selected = 8),
+        selectInput('plot_dpi', 'Please select plot quality (DPI)', choices = c('Low, 72dpi' = 72, 'High, 300dpi' = 300, 'Very high, 400dpi' = 400), selected = 300),
         radioButtons('format_radio', 'Select file extension', choices = c('.png', '.pdf'), inline = T),
         downloadButton('downloadPlot', 'Download Plot')
           

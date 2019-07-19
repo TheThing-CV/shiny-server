@@ -15,6 +15,9 @@ library('janitor')
 library('tidyr')
 library('colourpicker')
 library('shinyjs')
+library('gginnards')
+
+barplot_changed = F
 
 function(input, output, session) {
   
@@ -144,6 +147,29 @@ function(input, output, session) {
     shinyjs::show('download_box')
   })
   
+  observe({
+    if(input$boxplot_stat_check){
+      shinyjs::enable('stat_method_radio')
+      shinyjs::enable('multiple_adj_radio')
+    }
+    else{
+      shinyjs::disable('stat_method_radio')
+      shinyjs::disable('multiple_adj_radio')
+    }
+    
+    
+  })
+  
+  observe({
+    if(input$plot_type == 'Barplot')
+      updateRadioButtons(session, 'add_geoms_radio', inline = T, choices = c('Mean/SE' = 'mean_se', 'Mean/SD' = 'mean_sd', 'Mean/95CI' = 'mean_ci', 'None' = 'mean'))
+    else if(input$plot_type == 'Violin plot')
+      updateRadioButtons(session, 'add_geoms_radio', inline = T, choices = c('Boxplot' = 'boxplot', 'Points' = 'dotplot', 'Mean/SE' = 'mean_se', 'Mean/SD' = 'mean_sd', 'Mean/95CI' = 'mean_ci', 'None' = NA))
+    
+  })
+  
+  
+  
  
   
   shinyjs::show("main_params")
@@ -157,7 +183,7 @@ function(input, output, session) {
       return();
     
     
-    if(input$plot_type == 'Histogram' || input$plot_type == 'Boxplot'){
+    if(input$plot_type == 'Histogram' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
       selectInput('x_var', 'Select variable to plot', choices = names(select_if(data(), is.numeric)))
       
     }
@@ -168,20 +194,25 @@ function(input, output, session) {
     if(is.null(data()))
       return();
     
-    if(input$plot_type == 'Histogram'){
+    if(input$plot_type == 'Histogram')
       selectInput('by_group', 'Select grouping variable', choices = c('None', names(select_if(data(), is.factor))))
-    }
-    
-    else if (input$plot_type == 'Boxplot'){
+    else if (input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot')
       selectInput('x_group', 'Select grouping variable', choices = c(names(select_if(data(), is.factor))))
-    }
   })
+  
+  # output$y <- renderUI({
+  #   if(is.null(data()))
+  #     return();
+  #   
+  #   
+  #   
+  # })
   
   output$z <- renderUI({
     if(is.null(data()))
       return();
-    if (input$plot_type == 'Boxplot'){
-      selectInput('by_group', 'Select additional grouping variable', choices = c('None', names(select_if(data(), is.factor))))
+    if (input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
+      selectInput('x_by_group', 'Select additional grouping variable', choices = c('None', names(select_if(data(), is.factor))))
     }
     
   })
@@ -190,8 +221,18 @@ function(input, output, session) {
     if(is.null(data()))
       return();
     
-    if (input$plot_type == 'Boxplot'){
+    if (input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
       selectInput('box_orientation', 'Select orientation', choices = c('vertical', 'horizontal'))
+    }
+  })
+  
+  
+  output$order <- renderUI({
+    if(is.null(data()))
+      return();
+    
+    if (input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
+      selectInput('order_select', 'Select order', choices = levels(data()[[input$x_group]]), multiple = T, selected = levels(data()[[input$x_group]]))
     }
   })
   
@@ -203,6 +244,8 @@ function(input, output, session) {
     y_label <- if(input$y_label != '') input$y_label else NULL
     plot_title <- if(input$plot_title != '') input$plot_title else NULL
     
+   
+    
     ##############################################################################################################
     ###########################################   BOXPLOT  #######################################################
     ##############################################################################################################
@@ -213,6 +256,14 @@ function(input, output, session) {
         shinyjs::hide('histogram_checks')
         shinyjs::show('add_jitter')
         shinyjs::show('color_fill_radio')
+        shinyjs::show('stat_method_radio')
+        shinyjs::show('multiple_adj_radio')
+        shinyjs::show('boxplot_stat_check')
+        shinyjs::hide('add_geoms_button')
+        shinyjs::hide('add_geoms_radio')
+        shinyjs::show('faceting')
+        
+        
         
         # shinyjs::show("download_i_graph")
         # 
@@ -220,25 +271,41 @@ function(input, output, session) {
         
         temp <- drop_na(data())
         
-        # my_comparisons <- list( c("setosa", "versicolor"), c("versicolor", "virginica"), c("setosa", "virginica"))
         
+        m <- t(combn(levels(data()[[input$x_group]]), 2))
+        l <- list()
+        for (variable in 1:nrow(m)) {
+          l[[variable]] <- as.vector(m[variable, ])
+        }
+        
+
         if(input$color_fill_radio == 'color')
-            p <- ggboxplot(temp, x = input$x_group, y = input$x_var,  color = if(input$by_group != 'None') input$by_group else input$x_group, palette = input$pallete,
+            p <- ggboxplot(temp, x = input$x_group, y = input$x_var, order = input$order_select, color = if(input$x_by_group != 'None') input$x_by_group else input$x_group, palette = input$pallete,
                  add = if(input$add_jitter) 'jitter' else NA, xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal(),  orientation = input$box_orientation) 
         else 
-            p <- ggboxplot(temp, x = input$x_group, y = input$x_var,  fill = if(input$by_group != 'None') input$by_group else input$x_group, palette = input$pallete,
+            p <- ggboxplot(temp, x = input$x_group, y = input$x_var,   order = input$order_select, fill = if(input$x_by_group != 'None') input$x_by_group else input$x_group, palette = input$pallete,
                  add = if(input$add_jitter) 'jitter' else NA, xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal(),  orientation = input$box_orientation) 
         
         p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
           font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
-        ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
+        p <- ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
         
-        p + stat_compare_means(method = switch(input$stat_method_radio, 'Anova' = 'anova', 'Kruskal-Wallis' = 'kruskal.test', 'Student t-test' = 't.test', 'Wilcoxon test' = 'wilcox.test'), size = input$annotate_size
-                             # , label.y=6.5
-                             )
-        #   stat_compare_means(
-        #     # comparisons = my_comparisons
-        #     )
+        stat_test <- compare_means(as.formula(paste0(input$x_var, '~', input$x_group)), data = temp, method = 't.test', p.adjust.method = input$multiple_adj_radio)
+        stat_test <- stat_test %>% mutate(y.position = max(temp[[input$x_var]]) + (1:nrow(stat_test)) * (max(temp[[input$x_var]])) / 10)
+        
+        
+        if(input$boxplot_stat_check && input$x_by_group == 'None'){
+          p <- p + stat_compare_means(method = switch(input$stat_method_radio, 'Anova' = 'anova', 'Kruskal-Wallis' = 'kruskal.test', 'Student t-test' = 't.test', 'Wilcoxon test' = 'wilcox.test'), size = input$annotate_size) +
+            stat_pvalue_manual(stat_test, label = 'p = {p.adj}')
+          p$layers[[which_layers(p, "GeomSignif")]]$aes_params$textsize <- input$annotate_size
+          
+          
+        }
+        if(input$faceting && input$x_by_group != 'None')
+          facet(p, facet.by = input$x_by_group)
+        else
+          p 
+        
     } 
     
     ##############################################################################################################
@@ -257,6 +324,10 @@ function(input, output, session) {
       shinyjs::show('histogram_checks')
       shinyjs::hide('add_jitter')
       shinyjs::hide('color_fill_radio')
+      shinyjs::hide('stat_method_radio')
+      shinyjs::hide('multiple_adj_radio')
+      shinyjs::hide('boxplot_stat_check')
+      shinyjs::hide('add_geoms_radio')
       
       
       temp <- drop_na(data())
@@ -308,13 +379,53 @@ function(input, output, session) {
     ##############################################################################################################
     
     else if(input$plot_type == 'Violin plot') {
+      shinyjs::hide('bins_slider')
+      shinyjs::hide('custom_colour')
+      shinyjs::hide('histogram_checks')
+      shinyjs::hide('add_jitter')
+      shinyjs::show('color_fill_radio')
+      shinyjs::show('stat_method_radio')
+      shinyjs::show('multiple_adj_radio')
+      shinyjs::show('boxplot_stat_check')
       shinyjs::hide("download_i_graph")
-      
-      
       shinyjs::hide("plotly")
-      ggviolin(ToothGrowth, "dose", "len", fill = "supp",
-               palette = "jco", 
-               add.params = list(fill = "white"))
+      shinyjs::show('add_geoms_radio')
+      
+      temp <- drop_na(data())
+      
+      m <- t(combn(levels(data()[[input$x_group]]), 2))
+      l <- list()
+      for (variable in 1:nrow(m)) {
+        l[[variable]] <- as.vector(m[variable, ])
+      }
+      
+      if(input$color_fill_radio == 'color')
+        p <- ggviolin(temp, x = input$x_group, y = input$x_var, trim = T , order = input$order_select, color = if(input$x_by_group != 'None') input$x_by_group else input$x_group, palette = input$pallete,
+                       add = input$add_geoms_radio, add.params = list(size = 0.4), xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal(),  orientation = input$box_orientation) 
+      else 
+        p <- ggviolin(temp, x = input$x_group, y = input$x_var, trim = T, order = input$order_select, fill = if(input$x_by_group != 'None') input$x_by_group else input$x_group, palette = input$pallete,
+                       add = input$add_geoms_radio, add.params = list(size = 0.4), xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal(),  orientation = input$box_orientation) 
+      
+      p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
+        font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+      
+      p <- ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
+      
+      stat_test <- compare_means(as.formula(paste0(input$x_var, '~', input$x_group)), data = temp, method = 't.test', p.adjust.method = input$multiple_adj_radio)
+      stat_test <- stat_test %>% mutate(y.position = max(temp[[input$x_var]]) + (1:nrow(stat_test)) * (max(temp[[input$x_var]])) / 10)
+      
+      if(input$boxplot_stat_check && input$by_group == 'None'){
+        p <- p + stat_compare_means(method = switch(input$stat_method_radio, 'Anova' = 'anova', 'Kruskal-Wallis' = 'kruskal.test', 'Student t-test' = 't.test', 'Wilcoxon test' = 'wilcox.test'), size = input$annotate_size, label.y = max(temp[[input$x_var]]) + 2) +
+          stat_pvalue_manual(stat_test, label = 'p = {p.adj}')
+        p$layers[[which_layers(p, "GeomSignif")]]$aes_params$textsize <- input$annotate_size
+        
+        
+      }
+      if(input$faceting && input$x_by_group != 'None')
+        facet(p, facet.by = input$x_by_group)
+      else
+        p 
+      
     }
     
     ##############################################################################################################
@@ -326,13 +437,55 @@ function(input, output, session) {
     ###########################################   BARPLOT  #######################################################
     ##############################################################################################################
     else if(input$plot_type == 'Barplot') {
+      shinyjs::hide('bins_slider')
+      shinyjs::hide('custom_colour')
+      shinyjs::hide('histogram_checks')
+      shinyjs::hide('add_jitter')
+      shinyjs::show('color_fill_radio')
+      shinyjs::show('stat_method_radio')
+      shinyjs::show('multiple_adj_radio')
+      shinyjs::show('boxplot_stat_check')
       shinyjs::hide("download_i_graph")
-      
       shinyjs::hide("plotly")
-      ggbarplot(ToothGrowth, x = "dose", y = "len", add = "mean_se",
-                color = "supp", palette = "jco", fill = 'supp',
-                position = position_dodge(0.8))+
-        stat_compare_means(aes(group = supp), label = "p.signif", label.y = 29)    
+      shinyjs::show('add_geoms_radio')
+      
+      temp <- drop_na(data())
+      
+      
+    
+      
+      m <- t(combn(levels(data()[[input$x_group]]), 2))
+      l <- list()
+      for (variable in 1:nrow(m)) {
+        l[[variable]] <- as.vector(m[variable, ])
+      }
+      
+      if(input$color_fill_radio == 'color')
+        p <- ggbarplot(temp, x = input$x_group, y = input$x_var, label = TRUE, lab.nb.digits = 2, lab.pos = 'in', error.plot = "upper_errorbar", width = 0.4, order = input$order_select, color = if(input$x_by_group != 'None') input$x_by_group else input$x_group, palette = input$pallete,
+                       position = position_dodge(), add = input$add_geoms_radio, xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal(),  orientation = input$box_orientation) 
+      else 
+        p <- ggbarplot(temp, x = input$x_group, y = input$x_var, label = TRUE, lab.nb.digits = 2, lab.pos = 'in', error.plot = "upper_errorbar", width = 0.4, order = input$order_select, fill = if(input$x_by_group != 'None') input$x_by_group else input$x_group, palette = input$pallete,
+                       position = position_dodge(), add = input$add_geoms_radio, xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal(),  orientation = input$box_orientation) 
+      
+      p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
+        font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+      p <- ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
+      
+      stat_test <- compare_means(as.formula(paste0(input$x_var, '~', input$x_group)), data = temp, method = 't.test', p.adjust.method = input$multiple_adj_radio)
+      stat_test <- stat_test %>% mutate(y.position = max(temp[[input$x_var]]) + (1:nrow(stat_test)) * (max(temp[[input$x_var]])) / 10)
+      
+      if(input$boxplot_stat_check && input$x_by_group == 'None'){
+        p <- p + stat_compare_means(method = switch(input$stat_method_radio, 'Anova' = 'anova', 'Kruskal-Wallis' = 'kruskal.test', 'Student t-test' = 't.test', 'Wilcoxon test' = 'wilcox.test'), size = input$annotate_size) +
+          stat_pvalue_manual(stat_test, label = 'p = {p.adj}')
+        p$layers[[which_layers(p, "GeomSignif")]]$aes_params$textsize <- input$annotate_size
+        
+        
+      }
+      if(input$faceting && input$x_by_group != 'None')
+        facet(p, facet.by = input$x_by_group)
+      else
+        p 
+      
     } 
     
     ##############################################################################################################
