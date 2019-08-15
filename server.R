@@ -183,7 +183,7 @@ function(input, output, session) {
       return();
     
     
-    if(input$plot_type == 'Histogram' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
+    if(input$plot_type == 'Donut plot' || input$plot_type == 'Pie plot' || input$plot_type == 'Lollipop plot' || input$plot_type == 'Lineplot' || input$plot_type == 'Histogram' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
       selectInput('x_var', 'Select variable to plot', choices = names(select_if(data(), is.numeric)))
       
     }
@@ -196,7 +196,7 @@ function(input, output, session) {
     
     if(input$plot_type == 'Histogram')
       selectInput('by_group', 'Select grouping variable', choices = c('None', names(select_if(data(), is.factor))))
-    else if (input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot')
+    else if (input$plot_type == 'Donut plot' || input$plot_type == 'Pie plot' || input$plot_type == 'Lollipop plot' || input$plot_type == 'Lineplot' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot')
       selectInput('x_group', 'Select grouping variable', choices = c(names(select_if(data(), is.factor))))
   })
   
@@ -211,7 +211,7 @@ function(input, output, session) {
   output$z <- renderUI({
     if(is.null(data()))
       return();
-    if (input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
+    if (input$plot_type == 'Lollipop plot' || input$plot_type == 'Lineplot' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
       selectInput('x_by_group', 'Select additional grouping variable', choices = c('None', names(select_if(data(), is.factor))))
     }
     
@@ -231,7 +231,7 @@ function(input, output, session) {
     if(is.null(data()))
       return();
     
-    if (input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
+    if (input$plot_type == 'Boxplot' || input$plot_type == 'Lineplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
       selectInput('order_select', 'Select order', choices = levels(data()[[input$x_group]]), multiple = T, selected = levels(data()[[input$x_group]]))
     }
   })
@@ -261,7 +261,11 @@ function(input, output, session) {
         shinyjs::show('boxplot_stat_check')
         shinyjs::hide('add_geoms_button')
         shinyjs::hide('add_geoms_radio')
+        shinyjs::hide('size_slider')
         shinyjs::show('faceting')
+        shinyjs::hide('labels_check')
+        shinyjs::show('pallete')
+        
         
         
         
@@ -328,6 +332,12 @@ function(input, output, session) {
       shinyjs::hide('multiple_adj_radio')
       shinyjs::hide('boxplot_stat_check')
       shinyjs::hide('add_geoms_radio')
+      shinyjs::hide('size_slider')
+      shinyjs::hide('labels_check')
+      shinyjs::show('pallete')
+      
+      
+      
       
       
       temp <- drop_na(data())
@@ -390,6 +400,12 @@ function(input, output, session) {
       shinyjs::hide("download_i_graph")
       shinyjs::hide("plotly")
       shinyjs::show('add_geoms_radio')
+      shinyjs::hide('size_slider')
+      shinyjs::hide('labels_check')
+      shinyjs::show('pallete')
+      
+      
+      
       
       temp <- drop_na(data())
       
@@ -448,6 +464,12 @@ function(input, output, session) {
       shinyjs::hide("download_i_graph")
       shinyjs::hide("plotly")
       shinyjs::show('add_geoms_radio')
+      shinyjs::hide('size_slider')
+      shinyjs::hide('labels_check')
+      shinyjs::show('pallete')
+      
+      
+      
       
       temp <- drop_na(data())
       
@@ -492,33 +514,132 @@ function(input, output, session) {
     ###########################################   END BARPLOT  ###################################################
     ##############################################################################################################
     
+    ##############################################################################################################
+    ###########################################   LOLLIPOP  ######################################################
+    ##############################################################################################################
+    
     else if(input$plot_type == 'Lollipop plot') {
-      shinyjs::hide("download_i_graph")
+      shinyjs::hide('bins_slider')
+      shinyjs::hide('custom_colour')
+      shinyjs::hide('histogram_checks')
+      shinyjs::hide('add_jitter')
+      shinyjs::hide('color_fill_radio')
+      shinyjs::hide('stat_method_radio')
+      shinyjs::hide('multiple_adj_radio')
+      shinyjs::hide('boxplot_stat_check')
+      shinyjs::hide('add_geoms_button')
+      shinyjs::hide('add_geoms_radio')
+      shinyjs::show('faceting')
+      shinyjs::show('pallete')
+      shinyjs::show('size_slider')
+      shinyjs::show('labels_check')
+      shinyjs::show('pallete')
       
       
-      shinyjs::hide("plotly")
-      dfm <- mtcars
-      dfm$cyl <- as.factor(dfm$cyl)
-      dfm$name <- rownames(dfm)
-      ggdotchart(dfm, x = "name", y = "mpg",
-                 color = "cyl",                                # Color by groups
-                 palette = c("#00AFBB", "#E7B800", "#FC4E07"), # Custom color palette
+      
+      temp <- drop_na(data())
+      # dfm <- mtcars
+      # dfm$cyl <- as.factor(dfm$cyl)
+      # dfm$name <- rownames(dfm)
+      
+      ggdotchart(temp, x = input$x_group, y = input$x_var,
+                 color = if(input$x_by_group != "None") input$x_by_group,                                # Color by groups
+                 facet.by = if(input$x_by_group != "None" && input$faceting) input$x_by_group,  
+                 palette = input$pallete, # Custom color palette
                  sorting = "ascending",                        # Sort value in descending order
+                 dot.size = input$size_slider,
                  add = "segments",                             # Add segments from y = 0 to dots
-                 ggtheme = theme_pubr()                        # ggplot2 theme
+                 label = if(input$labels_check) round(temp[[input$x_var]]),                        # Add mpg values as dot labels
+                 font.label = list(color = "white", size = 9, 
+                                   vjust = 0.5), 
+                 ggtheme = theme_minimal()                       # ggplot2 theme
       )
     }
     
+    ##############################################################################################################
+    ###########################################   END LOLLIPOP  ##################################################
+    ##############################################################################################################
+    
+    ##############################################################################################################
+    ###########################################   LINE PLOT  #####################################################
+    ##############################################################################################################
+    
+    
     else if(input$plot_type == 'Lineplot') {
+      shinyjs::hide('bins_slider')
+      shinyjs::hide('custom_colour')
+      shinyjs::hide('histogram_checks')
+      shinyjs::hide('add_jitter')
+      shinyjs::hide('color_fill_radio')
+      shinyjs::hide('stat_method_radio')
+      shinyjs::hide('multiple_adj_radio')
+      shinyjs::hide('boxplot_stat_check')
+      shinyjs::hide('add_geoms_button')
+      shinyjs::hide('add_geoms_radio')
+      shinyjs::hide('size_slider')
+      shinyjs::show('faceting')
+      shinyjs::hide('labels_check')
+      shinyjs::show('pallete')
+      
+      
       shinyjs::hide("download_i_graph")
       
       
       shinyjs::hide("plotly")
-      ggline(ToothGrowth, x = "dose", y = "len", add = "mean_se",
-             color = "supp", palette = "jco", size=.8)+
-        stat_compare_means(aes(group = supp), label = "p.signif", 
-                           label.y = c(16, 25, 29)) 
+      
+      
+      temp <- drop_na(data())
+      
+      
+      m <- t(combn(levels(data()[[input$x_group]]), 2))
+      l <- list()
+      for (variable in 1:nrow(m)) {
+        l[[variable]] <- as.vector(m[variable, ])
+      }
+      
+      
+      if(input$x_by_group != 'None')
+        p <- ggline(temp, x = input$x_group, y = input$x_var, order = input$order_select, color = input$x_by_group, palette = input$pallete,
+                  add = "mean_se", xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal())
+      else
+        p <- ggline(temp, x = input$x_group, y = input$x_var, order = input$order_select, palette = input$pallete,
+                    add = c("mean_se", 'violin'), xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal())
+      
+      p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
+        font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+      p <- ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
+      
+      
+      
+      # p <- ggline(temp, x = input$x_group, y = input$x_var, add = "mean_se")
+      # p
+      # 
+      # stat_test <- compare_means(as.formula(paste0(input$x_var, '~', input$x_group)), data = temp, method = 't.test', p.adjust.method = input$multiple_adj_radio)
+      # stat_test <- stat_test %>% mutate(y.position = max(temp[[input$x_var]]) + (1:nrow(stat_test)) * (max(temp[[input$x_var]])) / 10)
+
+
+      # if(input$boxplot_stat_check && input$x_by_group == 'None'){
+      #   p <- p + stat_compare_means(method = switch(input$stat_method_radio, 'Anova' = 'anova', 'Kruskal-Wallis' = 'kruskal.test', 'Student t-test' = 't.test', 'Wilcoxon test' = 'wilcox.test'), size = input$annotate_size) +
+      #     stat_pvalue_manual(stat_test, label = 'p = {p.adj}')
+      #   p$layers[[which_layers(p, "GeomSignif")]]$aes_params$textsize <- input$annotate_size
+      # 
+      # 
+      # }
+      if(input$faceting && input$x_by_group != 'None')
+        facet(p, facet.by = input$x_by_group)
+      else
+        p
+      # 
+      # ggline(ToothGrowth, x = "dose", y = "len", add = "mean_se",
+      #        color = "supp", palette = "jco", size=.8)+
+      #   stat_compare_means(aes(group = supp), label = "p.signif", 
+      #                      label.y = c(16, 25, 29)) 
     } 
+    
+    ##############################################################################################################
+    ###########################################   END LINE PLOT  #################################################
+    ##############################################################################################################
+    
     
     else if(input$plot_type == 'Contingency table') {
       shinyjs::hide("download_i_graph")
@@ -598,14 +719,35 @@ function(input, output, session) {
     
     else if(input$plot_type == 'Correlation plot') {
       shinyjs::hide("download_i_graph")
+      shinyjs::hide("plotly")
+      shinyjs::hide('bins_slider')
+      shinyjs::hide('custom_colour')
+      shinyjs::hide('histogram_checks')
+      shinyjs::hide('add_jitter')
+      shinyjs::hide('color_fill_radio')
+      shinyjs::hide('stat_method_radio')
+      shinyjs::hide('multiple_adj_radio')
+      shinyjs::hide('boxplot_stat_check')
+      shinyjs::hide('add_geoms_radio')
+      shinyjs::hide('size_slider')
+      shinyjs::hide('labels_check')
+      shinyjs::hide('faceting')
+      shinyjs::hide('pallete')
+      
+      shinyjs::hide("download_i_graph")
       
       
       shinyjs::hide("plotly")
-      corr <- round(cor(mtcars), 1)
-      p.mat <- cor_pmat(mtcars)
-      ggcorrplot(corr, hc.order = TRUE, type = "lower",
-                 lab = TRUE, p.mat = p.mat)
-    } 
+      
+      temp <- drop_na(data())
+      temp <- temp %>% select_if(is.numeric)
+      corr <- round(cor(temp), 1)
+      p.mat <- cor_pmat(temp)
+      g <- ggcorrplot(corr, hc.order = TRUE, type = "lower",
+                 lab = TRUE, lab_size = input$annotate_size, p.mat = p.mat, insig = "blank", ggtheme = ggplot2::theme_bw(), )  + rremove("grid")
+      
+      g <- ggpar(g, font.legend = c(input$legend_slider, 'plain', 'black')) 
+      } 
     
     else if(input$plot_type == 'Scatter plot') {
       shinyjs::hide("download_i_graph")
@@ -637,35 +779,106 @@ function(input, output, session) {
       )
     }
     
+    
+    ##############################################################################################################
+    ###########################################   PIE PLOT  ######################################################
+    ##############################################################################################################
+    
     else if(input$plot_type == 'Pie plot') {
+      shinyjs::hide("download_i_graph")
+      shinyjs::hide("plotly")
+      shinyjs::hide('bins_slider')
+      shinyjs::hide('custom_colour')
+      shinyjs::hide('histogram_checks')
+      shinyjs::hide('add_jitter')
+      shinyjs::hide('color_fill_radio')
+      shinyjs::hide('stat_method_radio')
+      shinyjs::hide('multiple_adj_radio')
+      shinyjs::hide('boxplot_stat_check')
+      shinyjs::hide('add_geoms_radio')
+      shinyjs::hide('size_slider')
+      shinyjs::hide('labels_check')
+      shinyjs::hide('faceting')
+      shinyjs::show('pallete')
+      
+      
       shinyjs::hide("download_i_graph")
       
       
       shinyjs::hide("plotly")
-      df <- data.frame(
-        group = c("Male", "Female", "Child"),
-        value = c(25, 25, 50))
-      labs <- paste0(df$group, " (", df$value, "%)")
-      ggpie(df, "value", label = labs,
-            lab.pos = "in", lab.font = "white",
-            fill = "group", color = "white",
-            palette = c("#00AFBB", "#E7B800", "#FC4E07"))
-    }
+      
+      temp <- drop_na(data())
+      
+      
+      
+      labs <- paste0(temp[[input$x_group]], "\n (", temp[[input$x_var]], "%)")
+      p <- ggpie(temp, input$x_var, label = labs, fill = input$x_group, color = "white", palette = input$pallete, lab.pos = "in", lab.font = c(input$annotate_size, 'plain',"white")
+    #         lab.pos = "in", lab.font = "white",
+    #         fill = input$by_group, color = "white",
+    #         palette = input$pallete, xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal(), size = input$annotate_size)
+    # 
+      )
+      # p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
+      #   font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+      # p <- ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
+      # 
+      p
+      }
+    
+    ##############################################################################################################
+    ###########################################   END PIE PLOT  ##################################################
+    ##############################################################################################################
+    
+    ##############################################################################################################
+    ###########################################   DONUT PLOT  ####################################################
+    ##############################################################################################################
+    
     
     else if(input$plot_type == 'Donut plot') {
       shinyjs::hide("download_i_graph")
+      shinyjs::hide("plotly")
+      shinyjs::hide('bins_slider')
+      shinyjs::hide('custom_colour')
+      shinyjs::hide('histogram_checks')
+      shinyjs::hide('add_jitter')
+      shinyjs::hide('color_fill_radio')
+      shinyjs::hide('stat_method_radio')
+      shinyjs::hide('multiple_adj_radio')
+      shinyjs::hide('boxplot_stat_check')
+      shinyjs::hide('add_geoms_radio')
+      shinyjs::hide('size_slider')
+      shinyjs::hide('labels_check')
+      shinyjs::hide('faceting')
+      shinyjs::show('pallete')
+      
+      
+      shinyjs::hide("download_i_graph")
       
       
       shinyjs::hide("plotly")
-      df <- data.frame(
-        group = c("Male", "Female", "Child"),
-        value = c(25, 25, 50))
-      labs <- paste0(df$group, " (", df$value, "%)")
-      ggdonutchart(df, "value", label = labs,
-                   lab.pos = "in", lab.font = "white",
-                   fill = "group", color = "white",
-                   palette = c("#00AFBB", "#E7B800", "#FC4E07"))
+      
+      temp <- drop_na(data())
+      
+      
+      
+      labs <- paste0(temp[[input$x_group]], "\n (", temp[[input$x_var]], "%)")
+      p <- ggdonutchart(temp, input$x_var, label = labs, fill = input$x_group, color = "white", palette = input$pallete, lab.pos = "in", lab.adjust = 1, lab.font = c(input$annotate_size, 'plain',"white")
+                 #         lab.pos = "in", lab.font = "white",
+                 #         fill = input$by_group, color = "white",
+                 #         palette = input$pallete, xlab = x_label, ylab = y_label, title = plot_title, ggtheme = theme_minimal(), size = input$annotate_size)
+                 # 
+      )
+      # p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
+      #   font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+      # p <- ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
+      # 
+      p
     }
+    
+    ##############################################################################################################
+    ###########################################  END DONUT PLOT  #################################################
+    ##############################################################################################################
+    
     
     else if(input$plot_type == 'Radar plot') {
       shinyjs::hide("download_i_graph")

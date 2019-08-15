@@ -8,6 +8,11 @@ library('shinyhelper')
 
 
 fluidPage(
+#   tags$head(tags$style(
+#   HTML('
+#         body, label, input, button, select {
+#             font-family: "Consolas";}')
+# )),
 
                               # tags$head(tags$style(HTML("
                               #   .btn {
@@ -30,9 +35,10 @@ fluidPage(
                               # 
                               #   "))),
           
-  headerPanel('Welcome to Plotus!'),
+  titlePanel('Plotus - data visualization software'),
   
-  sidebarPanel(useShinyjs(), 
+  
+  sidebarPanel(useShinyjs(), # tags$style(".well {background-color: #FFF0B5;}"),
     
       fileInput('file_upload', 'Upload your data', accept=c("excel", "excel files", ".xlsx")) %>% helper(content = "upload_file", colour = 'steelblue'),
       # selectInput('theme_input', 'Select plot theme', choices = c('minimal', 'grey', 'classic', 'void')),
@@ -50,6 +56,8 @@ fluidPage(
         colourpicker::colourInput('custom_colour', 'Select custom colour', '#5D4E73'),
         uiOutput('y'),
         uiOutput('z'),
+        sliderInput('size_slider', 'Select size', min = 1, max = 20, value = 1),
+        checkboxInput('labels_check', 'Add numeric labels?', value = F),
         checkboxInput('faceting', 'Use faceting for grouping variable?', value = F),
         
         uiOutput('orientation'),
@@ -98,7 +106,7 @@ fluidPage(
     tabsetPanel(type = 'tabs', id='tabs',
       tabPanel("Data / summary", value = 'data_check', DT::dataTableOutput('data'), verbatimTextOutput('summary'), verbatimTextOutput('summary2'), verbatimTextOutput('contingency_table')),
       tabPanel("Plots", value = 'data_plot', 
-               plotOutput('plot_1', height = 750),
+               plotOutput('plot_1', height = 470),
                box(id = 'plotly', width = 800, 
                    plotlyOutput("plot_2")
                ),
