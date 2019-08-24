@@ -272,8 +272,10 @@ function(input, output, session) {
         # shinyjs::show("download_i_graph")
         # 
         # shinyjs::show('plotly')
-        
-        temp <- drop_na(data())
+        col <- ncol(data())
+        temp <- data()
+        temp <- temp[as.logical((rowSums(is.na(temp))-col)),]
+        # temp <- drop_na(data())
         
         
         m <- t(combn(levels(data()[[input$x_group]]), 2))
@@ -338,9 +340,12 @@ function(input, output, session) {
       
       
       
+      col <- ncol(data())
+      temp <- data()
+      temp <- temp[as.logical((rowSums(is.na(temp))-col)),]
       
+      # temp <- drop_na(data())
       
-      temp <- drop_na(data())
       col <- input$x_var
 
       res <- shapiro.test(data()[[col]])
@@ -405,9 +410,11 @@ function(input, output, session) {
       shinyjs::show('pallete')
       
       
+      col <- ncol(data())
+      temp <- data()
+      temp <- temp[as.logical((rowSums(is.na(temp))-col)),]
       
-      
-      temp <- drop_na(data())
+      # temp <- drop_na(data())
       
       m <- t(combn(levels(data()[[input$x_group]]), 2))
       l <- list()
@@ -470,8 +477,10 @@ function(input, output, session) {
       
       
       
-      
-      temp <- drop_na(data())
+      col <- ncol(data())
+      temp <- data()
+      temp <- temp[as.logical((rowSums(is.na(temp))-col)),]
+      # temp <- drop_na(data())
       
       
     
@@ -536,8 +545,10 @@ function(input, output, session) {
       shinyjs::show('pallete')
       
       
-      
-      temp <- drop_na(data())
+      col <- ncol(data())
+      temp <- data()
+      temp <- temp[as.logical((rowSums(is.na(temp))-col)),]
+      # temp <- drop_na(data())
       # dfm <- mtcars
       # dfm$cyl <- as.factor(dfm$cyl)
       # dfm$name <- rownames(dfm)
@@ -587,8 +598,10 @@ function(input, output, session) {
       
       shinyjs::hide("plotly")
       
-      
-      temp <- drop_na(data())
+      col <- ncol(data())
+      temp <- data()
+      temp <- temp[as.logical((rowSums(is.na(temp))-col)),]
+      # temp <- drop_na(data())
       
       
       m <- t(combn(levels(data()[[input$x_group]]), 2))
@@ -717,6 +730,11 @@ function(input, output, session) {
         stat_compare_means(paired = TRUE)
     }
     
+    ##############################################################################################################
+    ###########################################   CORRELATION PLOT ###############################################
+    ##############################################################################################################
+    
+    
     else if(input$plot_type == 'Correlation plot') {
       shinyjs::hide("download_i_graph")
       shinyjs::hide("plotly")
@@ -740,6 +758,11 @@ function(input, output, session) {
       shinyjs::hide("plotly")
       
       temp <- drop_na(data())
+      # col <- ncol(data())
+      # temp <- data()
+      # temp <- temp[as.logical((rowSums(is.na(temp))-col)),]
+
+      
       temp <- temp %>% select_if(is.numeric)
       corr <- round(cor(temp), 1)
       p.mat <- cor_pmat(temp)
@@ -748,6 +771,11 @@ function(input, output, session) {
       
       g <- ggpar(g, font.legend = c(input$legend_slider, 'plain', 'black')) 
       } 
+    
+    ##############################################################################################################
+    ###########################################   END CORRELATION PLOT ###########################################
+    ##############################################################################################################
+    
     
     else if(input$plot_type == 'Scatter plot') {
       shinyjs::hide("download_i_graph")
@@ -806,8 +834,10 @@ function(input, output, session) {
       
       
       shinyjs::hide("plotly")
-      
-      temp <- drop_na(data())
+      col <- ncol(data())
+      temp <- data()
+      temp <- temp[as.logical((rowSums(is.na(temp))-col)),]
+      # temp <- drop_na(data())
       
       
       
@@ -856,8 +886,10 @@ function(input, output, session) {
       
       
       shinyjs::hide("plotly")
-      
-      temp <- drop_na(data())
+      col <- ncol(data())
+      temp <- data()
+      temp <- temp[as.logical((rowSums(is.na(temp))-col)),]
+      # temp <- drop_na(data())
       
       
       
