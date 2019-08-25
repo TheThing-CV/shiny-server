@@ -27,6 +27,8 @@ function(input, output, session) {
   shinyjs::hide("download_i_graph")
   shinyjs::hide('download_box')
   
+  
+  
   session_store <- reactiveValues()
   
   observe_helpers(withMathJax = TRUE, help_dir = "helper_mds")
@@ -172,23 +174,35 @@ function(input, output, session) {
   
  
   
-  shinyjs::show("main_params")
-  shinyjs::hide("title_labels")
-  shinyjs::hide("plotly")
-  shinyjs::hide("download_i_graph")
-  shinyjs::hide('download_box')
+  # shinyjs::show("main_params")
+  # shinyjs::hide("title_labels")
+  # shinyjs::hide("plotly")
+  # shinyjs::hide("download_i_graph")
+  # shinyjs::hide('download_box')
   
   output$x <- renderUI({
     if(is.null(data()))
       return();
     
     
-    if(input$plot_type == 'Donut plot' || input$plot_type == 'Pie plot' || input$plot_type == 'Lollipop plot' || input$plot_type == 'Lineplot' || input$plot_type == 'Histogram' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
-      selectInput('x_var', 'Select variable to plot', choices = names(select_if(data(), is.numeric)))
+    if(input$plot_type == 'Scatter margin plot' || input$plot_type == 'Scatter plot' || input$plot_type == 'Donut plot' || input$plot_type == 'Pie plot' || input$plot_type == 'Lollipop plot' || input$plot_type == 'Lineplot' || input$plot_type == 'Histogram' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
+      selectInput('x_var', 'Select first variable', choices = names(select_if(data(), is.numeric)))
       
     }
     
     })
+  
+  output$x2 <- renderUI({
+    if(is.null(data()))
+      return();
+    
+    
+    if(input$plot_type == 'Scatter margin plot' || input$plot_type == 'Scatter plot'){
+      selectInput('x2_var', 'Select second variable', choices = names(select_if(data(), is.numeric)), selected = names(select_if(data(), is.numeric))[2])
+      
+    }
+    
+  })
   
   output$y <- renderUI({
     if(is.null(data()))
@@ -196,8 +210,8 @@ function(input, output, session) {
     
     if(input$plot_type == 'Histogram')
       selectInput('by_group', 'Select grouping variable', choices = c('None', names(select_if(data(), is.factor))))
-    else if (input$plot_type == 'Donut plot' || input$plot_type == 'Pie plot' || input$plot_type == 'Lollipop plot' || input$plot_type == 'Lineplot' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot')
-      selectInput('x_group', 'Select grouping variable', choices = c(names(select_if(data(), is.factor))))
+    else if (input$plot_type == 'Scatter margin plot' || input$plot_type == 'Scatter plot' || input$plot_type == 'Donut plot' || input$plot_type == 'Pie plot' || input$plot_type == 'Lollipop plot' || input$plot_type == 'Lineplot' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot')
+      selectInput('x_group', 'Select grouping variable', choices = c('None',names(select_if(data(), is.factor))), selected =names(select_if(data(), is.factor))[1])
   })
   
   # output$y <- renderUI({
@@ -265,6 +279,11 @@ function(input, output, session) {
         shinyjs::show('faceting')
         shinyjs::hide('labels_check')
         shinyjs::show('pallete')
+        shinyjs::hide('corr_method_radio')
+        shinyjs::hide('reg_line_method_radio')
+        shinyjs::hide('conf_int_check')
+        shinyjs::hide('margin_plot_radio')
+        
         
         
         
@@ -337,6 +356,13 @@ function(input, output, session) {
       shinyjs::hide('size_slider')
       shinyjs::hide('labels_check')
       shinyjs::show('pallete')
+      shinyjs::hide('corr_method_radio')
+      shinyjs::hide('reg_line_method_radio')
+      shinyjs::hide('conf_int_check')
+      shinyjs::hide('margin_plot_radio')
+      
+      
+      
       
       
       
@@ -408,6 +434,13 @@ function(input, output, session) {
       shinyjs::hide('size_slider')
       shinyjs::hide('labels_check')
       shinyjs::show('pallete')
+      shinyjs::hide('corr_method_radio')
+      shinyjs::hide('reg_line_method_radio')
+      shinyjs::hide('conf_int_check')
+      shinyjs::hide('margin_plot_radio')
+      
+      
+      
       
       
       col <- ncol(data())
@@ -474,6 +507,13 @@ function(input, output, session) {
       shinyjs::hide('size_slider')
       shinyjs::hide('labels_check')
       shinyjs::show('pallete')
+      shinyjs::hide('corr_method_radio')
+      shinyjs::hide('reg_line_method_radio')
+      shinyjs::hide('conf_int_check')
+      shinyjs::hide('margin_plot_radio')
+      
+      
+      
       
       
       
@@ -543,6 +583,13 @@ function(input, output, session) {
       shinyjs::show('size_slider')
       shinyjs::show('labels_check')
       shinyjs::show('pallete')
+      shinyjs::hide('corr_method_radio')
+      shinyjs::hide('reg_line_method_radio')
+      shinyjs::hide('conf_int_check')
+      shinyjs::hide('margin_plot_radio')
+      
+      
+      
       
       
       col <- ncol(data())
@@ -591,6 +638,13 @@ function(input, output, session) {
       shinyjs::show('faceting')
       shinyjs::hide('labels_check')
       shinyjs::show('pallete')
+      shinyjs::hide('corr_method_radio')
+      shinyjs::hide('reg_line_method_radio')
+      shinyjs::hide('conf_int_check')
+      shinyjs::hide('margin_plot_radio')
+      
+      
+      
       
       
       shinyjs::hide("download_i_graph")
@@ -751,6 +805,12 @@ function(input, output, session) {
       shinyjs::hide('labels_check')
       shinyjs::hide('faceting')
       shinyjs::hide('pallete')
+      shinyjs::hide('corr_method_radio')
+      shinyjs::hide('reg_line_method_radio')
+      shinyjs::hide('margin_plot_radio')
+      
+      
+      
       
       shinyjs::hide("download_i_graph")
       
@@ -776,36 +836,166 @@ function(input, output, session) {
     ###########################################   END CORRELATION PLOT ###########################################
     ##############################################################################################################
     
+    ##############################################################################################################
+    ###########################################  SCATTER PLOT ####################################################
+    ##############################################################################################################
     
     else if(input$plot_type == 'Scatter plot') {
       shinyjs::hide("download_i_graph")
-      
-      
       shinyjs::hide("plotly")
-      df <- mtcars
-      df$cyl <- as.factor(df$cyl)
-      ggscatter(df, x = "wt", y = "mpg",
-                add = "reg.line",                         # Add regression line
-                color = "cyl", palette = "jco",           # Color by groups "cyl"
-                shape = "cyl",                            # Change point shape by groups "cyl"
-                fullrange = TRUE,                         # Extending the regression line
-                rug = TRUE                                # Add marginal rug
-      )+
-        stat_cor(aes(color = cyl), label.x = 3)           # Add correlation coefficient
-    }
+      shinyjs::hide('bins_slider')
+      shinyjs::hide('custom_colour')
+      shinyjs::hide('histogram_checks')
+      shinyjs::hide('add_jitter')
+      shinyjs::hide('color_fill_radio')
+      shinyjs::hide('stat_method_radio')
+      shinyjs::hide('multiple_adj_radio')
+      shinyjs::hide('boxplot_stat_check')
+      shinyjs::hide('add_geoms_radio')
+      shinyjs::hide('size_slider')
+      shinyjs::hide('labels_check')
+      shinyjs::show('faceting')
+      shinyjs::show('pallete')
+      shinyjs::hide("plotly")
+      shinyjs::show('corr_method_radio')
+      shinyjs::show('reg_line_method_radio')
+      shinyjs::show('conf_int_check')
+      shinyjs::hide('margin_plot_radio')
+      
+      
+      
+      
+      col <- ncol(data())
+      temp <- data()
+      temp <- temp[as.logical((rowSums(is.na(temp))-col)),]
+      # temp <- drop_na(data())
+     
+      if(input$x_group != 'None' && input$faceting) {
+        p <- ggscatter(temp, x = input$x_var, y = input$x2_var,
+                  add = input$reg_line_method_radio,                       
+                  palette = input$pallete,  
+                  color = input$x_group,
+                  fullrange = T,
+                  cor.method = input$corr_method_radio,
+                  facet.by = input$x_group,
+                  conf.int = input$conf_int_check
+                  
+                  
+                  
+                  
+        ) +
+          # label = input$x_group, repel = TRUE,   
+          
+          stat_cor(aes(color = get(input$x_group)), method = input$corr_method_radio, size = input$annotate_size)
+        p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
+          font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+        p <- ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
+        
+      }
+      else if(input$x_group != 'None' && !input$faceting) {
+       
+        p <- ggscatter(temp, x = input$x_var, y = input$x2_var,
+                  add = input$reg_line_method_radio,                       
+                  palette = input$pallete,  
+                  color = input$x_group,
+                  fullrange = T,
+                  cor.method = input$corr_method_radio,
+                  conf.int = input$conf_int_check
+                  
+                 
+        ) +
+          # label = input$x_group, repel = TRUE,   
+          
+          stat_cor(aes(color = get(input$x_group)), method = input$corr_method_radio,  size = input$annotate_size)
+        p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
+          font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+        p <- ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
+        
+        
+      }
+      else {
+        p <- ggscatter(temp, x = input$x_var, y = input$x2_var,
+                  add = input$reg_line_method_radio,                      
+                  palette = input$pallete,  
+                  
+                  fullrange = T,
+                  conf.int = input$conf_int_check
+                  
+        ) +
+          # label = input$x_group, repel = TRUE,   
+          
+          stat_cor(method = input$corr_method_radio,  size = input$annotate_size)
+        p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
+          font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+        p <- ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
+        
+      }  
+      }
+                 
+      
+     
+    
+    
+    ##############################################################################################################
+    ###########################################  END SCATTER PLOT ################################################
+    ##############################################################################################################
+    
+    
+    ##############################################################################################################
+    ###########################################  MARGIN PLOT #####################################################
+    ##############################################################################################################
     
     else if(input$plot_type == 'Scatter margin plot') {
       shinyjs::hide("download_i_graph")
-      
-      
       shinyjs::hide("plotly")
-      ggscatterhist(
-        iris, x = "Sepal.Length", y = "Sepal.Width",
-        color = "Species", size = 3, alpha = 0.6,
-        palette = c("#00AFBB", "#E7B800", "#FC4E07"),
-        margin.params = list(fill = "Species", color = "black", size = 0.2)
-      )
+      shinyjs::hide('bins_slider')
+      shinyjs::hide('custom_colour')
+      shinyjs::hide('histogram_checks')
+      shinyjs::hide('add_jitter')
+      shinyjs::hide('color_fill_radio')
+      shinyjs::hide('stat_method_radio')
+      shinyjs::hide('multiple_adj_radio')
+      shinyjs::hide('boxplot_stat_check')
+      shinyjs::hide('add_geoms_radio')
+      shinyjs::hide('size_slider')
+      shinyjs::hide('labels_check')
+      shinyjs::hide('faceting')
+      shinyjs::show('pallete')
+      shinyjs::hide("plotly")
+      shinyjs::hide('corr_method_radio')
+      shinyjs::hide('reg_line_method_radio')
+      shinyjs::hide('conf_int_check')
+      shinyjs::show('margin_plot_radio')
+      
+      col <- ncol(data())
+      temp <- data()
+      temp <- temp[as.logical((rowSums(is.na(temp))-col)),]
+      
+      if(input$x_group != 'None'){
+        ggscatterhist(
+          temp, x = input$x_var, y = input$x2_var,
+          color = input$x_group, size = 3, alpha = 0.6,
+          palette = input$pallete,
+          margin.params = list(fill = input$x_group, color = "black", size = 0.2),
+          margin.plot = input$margin_plot_radio
+        )
+      }
+      else {
+        ggscatterhist(
+          temp, x = input$x_var, y = input$x2_var,
+          size = 3, alpha = 0.6,
+          palette = input$pallete,
+          margin.plot = input$margin_plot_radio,
+          margin.params = list(color = "black", size = 0.2)
+        )
+      }
+      
     }
+    
+    
+    ##############################################################################################################
+    ###########################################  END MARGIN PLOT #################################################
+    ##############################################################################################################
     
     
     ##############################################################################################################
@@ -828,6 +1018,12 @@ function(input, output, session) {
       shinyjs::hide('labels_check')
       shinyjs::hide('faceting')
       shinyjs::show('pallete')
+      shinyjs::hide('corr_method_radio')
+      shinyjs::hide('reg_line_method_radio')
+      shinyjs::hide('margin_plot_radio')
+      
+      
+      
       
       
       shinyjs::hide("download_i_graph")
@@ -880,6 +1076,12 @@ function(input, output, session) {
       shinyjs::hide('labels_check')
       shinyjs::hide('faceting')
       shinyjs::show('pallete')
+      shinyjs::hide('corr_method_radio')
+      shinyjs::hide('reg_line_method_radio')
+      shinyjs::hide('margin_plot_radio')
+      
+      
+      
       
       
       shinyjs::hide("download_i_graph")

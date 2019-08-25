@@ -34,8 +34,17 @@ fluidPage(
                               #   }
                               # 
                               #   "))),
-          
-  titlePanel('Plotus - data visualization software'),
+  tags$head(tags$style(
+    HTML('#title {
+           color: #407088;
+           font-size: 26px;
+           font-family: Roboto;
+           background-color: #fafafa;
+           margin: 30px auto;
+           width: 58%;
+          }'))),
+  tags$div(id="title", p('Plotus - data visualization and statistical analysis software')),
+  
   
   
   sidebarPanel(useShinyjs(), # tags$style(".well {background-color: #FFF0B5;}"),
@@ -52,6 +61,7 @@ fluidPage(
       box(id='plot_type', width=800, 
         selectInput('plot_type', 'Select plot type', c('Histogram', 'Boxplot', 'Violin plot',  'Barplot', "Lollipop plot", 'Lineplot', 'Scatter plot', 'Scatter margin plot', 'Pie plot', 'Donut plot', 'Contingency table', 'Tableplot', 'Genomeplot', 'Cluster plot', 'Independent t-test',  'Paired t-test', 'Correlation plot', 'Radar plot')),
         uiOutput('x'),
+        uiOutput('x2'),
         sliderInput('bins_slider', 'Number of bins', min = 1, max = 100, value = 30),
         colourpicker::colourInput('custom_colour', 'Select custom colour', '#5D4E73'),
         uiOutput('y'),
@@ -67,8 +77,12 @@ fluidPage(
         radioButtons('color_fill_radio', 'Select method to draw boxplots with?', choices = c('color', 'fill'), inline = T),
         radioButtons('add_geoms_radio', 'Select additional elements to plot', choices = c('Boxplot' = 'boxplot', 'Points' = 'jitter', 'Mean/SE' = 'mean_se', 'Mean/SD' = 'mean_sd', 'None' = NA), inline = T),
         checkboxInput('boxplot_stat_check', 'Add statistical tests to the plot?', value = T),
-        radioButtons('stat_method_radio', 'Select statistical method to use?', choices = c('Anova', 'Kruskal-Wallis', 'Student t-test', 'Wilcoxon test'), inline = T),
+        radioButtons('stat_method_radio', 'Select statistical method?', choices = c('Anova', 'Kruskal-Wallis', 'Student t-test', 'Wilcoxon test'), inline = T),
         radioButtons('multiple_adj_radio', 'Select multiple comparisons adjustment method', choices = c('Holm' = 'holm', 'Hochberg' = 'hochberg', 'Hommel' = 'hommel', 'Bonferroni' = 'bonferroni', 'FDR' = 'fdr'), inline = T),
+        radioButtons('corr_method_radio', 'Select correlation method?', choices = c('pearson', 'spearman', 'kendall'), inline = T),
+        radioButtons('reg_line_method_radio', 'Regression line method?', choices = c('none', 'reg.line', 'loess'), inline = T, selected = 'reg.line'),
+        checkboxInput('conf_int_check', 'Show 95% confidense intervals?', value = F),
+        radioButtons('margin_plot_radio', 'Margin plot method?', choices = c('hist', 'density', 'boxplot'), inline = T),
         
         checkboxInput('add_jitter', 'Add data points to plot?', value = F),
         
@@ -118,6 +132,9 @@ fluidPage(
                downloadButton("download_i_graph", "download i-graph")
                
                
+               ),
+      tabPanel("Tutorial", value = 'tutorial', br(), 
+               a("Click Here to listen to a beautiful music while working with Plotus", href="https://www.youtube.com/watch?v=Df3mkjtEwCY", target="_blank")
                )
       
     )
