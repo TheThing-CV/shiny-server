@@ -185,7 +185,7 @@ function(input, output, session) {
       return();
     
     
-    if(input$plot_type == 'Scatter margin plot' || input$plot_type == 'Scatter plot' || input$plot_type == 'Donut plot' || input$plot_type == 'Pie plot' || input$plot_type == 'Lollipop plot' || input$plot_type == 'Lineplot' || input$plot_type == 'Histogram' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
+    if(input$plot_type == 'Paired boxplot (paired t-test)' ||input$plot_type == 'Scatter margin plot' || input$plot_type == 'Scatter plot' || input$plot_type == 'Donut plot' || input$plot_type == 'Pie plot' || input$plot_type == 'Lollipop plot' || input$plot_type == 'Lineplot' || input$plot_type == 'Histogram' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
       selectInput('x_var', 'Select first variable', choices = names(select_if(data(), is.numeric)))
       
     }
@@ -210,7 +210,7 @@ function(input, output, session) {
     
     if(input$plot_type == 'Histogram')
       selectInput('by_group', 'Select grouping variable', choices = c('None', names(select_if(data(), is.factor))))
-    else if (input$plot_type == 'Scatter margin plot' || input$plot_type == 'Scatter plot' || input$plot_type == 'Donut plot' || input$plot_type == 'Pie plot' || input$plot_type == 'Lollipop plot' || input$plot_type == 'Lineplot' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot')
+    else if (input$plot_type == 'Paired boxplot (paired t-test)' || input$plot_type == 'Scatter margin plot' || input$plot_type == 'Scatter plot' || input$plot_type == 'Donut plot' || input$plot_type == 'Pie plot' || input$plot_type == 'Lollipop plot' || input$plot_type == 'Lineplot' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot')
       selectInput('x_group', 'Select grouping variable', choices = c('None',names(select_if(data(), is.factor))), selected =names(select_if(data(), is.factor))[1])
   })
   
@@ -708,38 +708,89 @@ function(input, output, session) {
     ##############################################################################################################
     
     
+    ##############################################################################################################
+    ###########################################   CONTINGENCY TABLE  #############################################
+    ##############################################################################################################
+    
+    
     else if(input$plot_type == 'Contingency table') {
-      shinyjs::hide("download_i_graph")
+      shinyjs::hide('bins_slider')
+      shinyjs::hide('custom_colour')
+      shinyjs::hide('histogram_checks')
+      shinyjs::hide('add_jitter')
+      shinyjs::hide('color_fill_radio')
+      shinyjs::hide('stat_method_radio')
+      shinyjs::hide('multiple_adj_radio')
+      shinyjs::hide('boxplot_stat_check')
+      shinyjs::hide('add_geoms_button')
+      shinyjs::hide('add_geoms_radio')
+      shinyjs::hide('size_slider')
+      shinyjs::hide('faceting')
+      shinyjs::hide('labels_check')
+      shinyjs::hide('pallete')
+      shinyjs::hide('corr_method_radio')
+      shinyjs::hide('reg_line_method_radio')
+      shinyjs::hide('conf_int_check')
+      shinyjs::hide('margin_plot_radio')
       
+      data <- data()
+     
+      data <- column_to_rownames(data)
+     
+     
       
-      shinyjs::hide("plotly")
-      data <- read.delim(
-        system.file("demo-data/housetasks.txt", package = "ggpubr"),
-        row.names = 1
-      )
+      p <- ggballoonplot(data, xlab = x_label, ylab = y_label, title = plot_title, show.label = TRUE, fill = "value", size = 15, ggtheme = theme_minimal()) + gradient_fill(c("steelblue", "white", "orange"))
+      p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
+        font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+      p <- ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
       
-      ggballoonplot(data, show.label = TRUE, fill = "value", size = 15, ggtheme = theme_minimal()) + gradient_fill(c("steelblue", "white", "orange"))
     } 
     
-    else if(input$plot_type == 'Tableplot'){
-      shinyjs::hide("download_i_graph")
-      
-      
-      shinyjs::hide("plotly")
-      stable <- desc_statby(iris, measure.var = input$y,
-                            grps = input$x)
-      stable <- stable[, c("Species", "length", "min", "max", "iqr", "mad", "mean", "sd", "se", "ci", "range", "cv", "var")]
-      stable.p <- ggtexttable(stable, rows = NULL,
-                              theme = ttheme("mBlue"))
-      
-      stable.p
-    }
+    ##############################################################################################################
+    ###########################################   END CONTINGENCY TABLE  #########################################
+    ##############################################################################################################
     
-    else if(input$plot_type == 'Genomeplot') {
-      shinyjs::hide("download_i_graph")
+    
+    # else if(input$plot_type == 'Tableplot'){
+    #   shinyjs::hide("download_i_graph")
+    #   
+    #   
+    #   shinyjs::hide("plotly")
+    #   stable <- desc_statby(iris, measure.var = input$y,
+    #                         grps = input$x)
+    #   stable <- stable[, c("Species", "length", "min", "max", "iqr", "mad", "mean", "sd", "se", "ci", "range", "cv", "var")]
+    #   stable.p <- ggtexttable(stable, rows = NULL,
+    #                           theme = ttheme("mBlue"))
+    #   
+    #   stable.p
+    # }
+    
+    ##############################################################################################################
+    ###########################################   GENOME PLOT  ###################################################
+    ##############################################################################################################
+    
+    
+    else if(input$plot_type == 'Genomeplot (demo)') {
+      shinyjs::hide('bins_slider')
+      shinyjs::hide('custom_colour')
+      shinyjs::hide('histogram_checks')
+      shinyjs::hide('add_jitter')
+      shinyjs::hide('color_fill_radio')
+      shinyjs::hide('stat_method_radio')
+      shinyjs::hide('multiple_adj_radio')
+      shinyjs::hide('boxplot_stat_check')
+      shinyjs::hide('add_geoms_button')
+      shinyjs::hide('add_geoms_radio')
+      shinyjs::hide('size_slider')
+      shinyjs::hide('faceting')
+      shinyjs::hide('labels_check')
+      shinyjs::hide('pallete')
+      shinyjs::hide('corr_method_radio')
+      shinyjs::hide('reg_line_method_radio')
+      shinyjs::hide('conf_int_check')
+      shinyjs::hide('margin_plot_radio')
       
       
-      shinyjs::hide("plotly")
       ggmaplot(diff_express, main = expression("Group 1" %->% "Group 2"),
                fdr = 0.05, fc = 2, size = 0.4,
                palette = c("#B31B21", "#1465AC", "darkgray"),
@@ -750,39 +801,115 @@ function(input, output, session) {
                font.main = "bold",
                ggtheme = ggplot2::theme_minimal())
     } 
+   
+    ##############################################################################################################
+    ###########################################   END GENOME PLOT  ###############################################
+    ##############################################################################################################
+    
+    ##############################################################################################################
+    ###########################################   CLUSTER PLOT  ##################################################
+    ##############################################################################################################
     
     else if(input$plot_type == 'Cluster plot') {
-      shinyjs::hide("download_i_graph")
+      shinyjs::hide('bins_slider')
+      shinyjs::hide('custom_colour')
+      shinyjs::hide('histogram_checks')
+      shinyjs::hide('add_jitter')
+      shinyjs::hide('color_fill_radio')
+      shinyjs::hide('stat_method_radio')
+      shinyjs::hide('multiple_adj_radio')
+      shinyjs::hide('boxplot_stat_check')
+      shinyjs::hide('add_geoms_button')
+      shinyjs::hide('add_geoms_radio')
+      shinyjs::hide('size_slider')
+      shinyjs::hide('faceting')
+      shinyjs::hide('labels_check')
+      shinyjs::hide('pallete')
+      shinyjs::hide('corr_method_radio')
+      shinyjs::hide('reg_line_method_radio')
+      shinyjs::hide('conf_int_check')
+      shinyjs::hide('margin_plot_radio')
       
+      data <- data()
+      data <- column_to_rownames(data)
       
       shinyjs::hide("plotly")
-      hc <- hclust(dist(USArrests), "ave")
-      ggdendrogram(hc, rotate = FALSE, size = 2)
+      
+      
+      hc <- hclust(dist(data), "ave")
+      p <- ggdendrogram(hc, xlab = x_label, ylab = y_label, title = plot_title, rotate = FALSE, size = 2)
+      p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
+        font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+      p <- ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
+      
     }
     
-    else if(input$plot_type == 'Independent t-test') {
-      shinyjs::hide("download_i_graph")
+    ##############################################################################################################
+    ###########################################   END CLUSTER PLOT  ##############################################
+    ##############################################################################################################
+    
+    # else if(input$plot_type == 'Independent t-test') {
+    #   shinyjs::hide("download_i_graph")
+    #   
+    #   
+    #   shinyjs::hide("plotly")
+    #   p <- ggboxplot(ToothGrowth, x = "supp", y = "len",
+    #                  color = "supp", palette = "jco",
+    #                  add = "jitter", size = .8)
+    #   #  Add p-value
+    #   p + stat_compare_means(method = 't.test')
+    # }
+    
+    
+    ##############################################################################################################
+    ###########################################   PAIRED BOX PLOT ################################################
+    ##############################################################################################################
+    
+    
+    else if(input$plot_type == 'Paired boxplot (paired t-test)') {
+      shinyjs::hide('bins_slider')
+      shinyjs::hide('custom_colour')
+      shinyjs::hide('histogram_checks')
+      shinyjs::hide('add_jitter')
+      shinyjs::hide('color_fill_radio')
+      shinyjs::hide('stat_method_radio')
+      shinyjs::hide('multiple_adj_radio')
+      shinyjs::hide('boxplot_stat_check')
+      shinyjs::hide('add_geoms_button')
+      shinyjs::hide('add_geoms_radio')
+      shinyjs::hide('size_slider')
+      shinyjs::hide('faceting')
+      shinyjs::hide('labels_check')
+      shinyjs::show('pallete')
+      shinyjs::hide('corr_method_radio')
+      shinyjs::hide('reg_line_method_radio')
+      shinyjs::hide('conf_int_check')
+      shinyjs::hide('margin_plot_radio')
       
       
       shinyjs::hide("plotly")
-      p <- ggboxplot(ToothGrowth, x = "supp", y = "len",
-                     color = "supp", palette = "jco",
-                     add = "jitter", size = .8)
-      #  Add p-value
-      p + stat_compare_means(method = 't.test')
-    }
-    
-    
-    else if(input$plot_type == 'Paired t-test') {
-      shinyjs::hide("download_i_graph")
       
+      col <- ncol(data())
+      temp <- data()
+      temp <- temp[as.logical((rowSums(is.na(temp))-col)),]
       
-      shinyjs::hide("plotly")
-      ggpaired(ToothGrowth, x = "supp", y = "len",
-               color = "supp", line.color = "gray", line.size = 0.4,
-               palette = "jco")+
+      p <- ggpaired(temp, x = input$x_group, y = input$x_var,
+               color = input$x_group, line.color = "gray", line.size = 0.4,
+               palette = input$pallete, xlab = x_label, ylab = y_label, title = plot_title) +
         stat_compare_means(paired = TRUE)
+      
+      p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
+        font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+      p <- ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
+      
+      
+      p
     }
+    
+    ##############################################################################################################
+    ###########################################   END PAIRED BOX PLOT ############################################
+    ##############################################################################################################
+    
     
     ##############################################################################################################
     ###########################################   CORRELATION PLOT ###############################################
@@ -972,22 +1099,31 @@ function(input, output, session) {
       temp <- temp[as.logical((rowSums(is.na(temp))-col)),]
       
       if(input$x_group != 'None'){
-        ggscatterhist(
+        p <- ggscatterhist(
           temp, x = input$x_var, y = input$x2_var,
           color = input$x_group, size = 3, alpha = 0.6,
           palette = input$pallete,
           margin.params = list(fill = input$x_group, color = "black", size = 0.2),
           margin.plot = input$margin_plot_radio
+          
         )
+        p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
+          font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+        p <- ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
+        
       }
       else {
-        ggscatterhist(
+        p <- ggscatterhist(
           temp, x = input$x_var, y = input$x2_var,
           size = 3, alpha = 0.6,
           palette = input$pallete,
           margin.plot = input$margin_plot_radio,
           margin.params = list(color = "black", size = 0.2)
         )
+        p <- p + font("xlab", size = input$labels_size, color = "black") + font("ylab", size = input$labels_size, color = "black") +
+          font("xy.text", size = input$x_y_size, color = "black") + font("title", size = input$title_size, color = "DarkGray", face = "bold.italic")
+        p <- ggpar(p, font.legend = c(input$legend_slider, 'plain', 'black')) 
+        
       }
       
     }
@@ -1113,18 +1249,47 @@ function(input, output, session) {
     ###########################################  END DONUT PLOT  #################################################
     ##############################################################################################################
     
+    ##############################################################################################################
+    ###########################################  RADAR PLOT  #################################################
+    ##############################################################################################################
     
     else if(input$plot_type == 'Radar plot') {
       shinyjs::hide("download_i_graph")
+      shinyjs::hide("plotly")
+      shinyjs::hide('bins_slider')
+      shinyjs::hide('custom_colour')
+      shinyjs::hide('histogram_checks')
+      shinyjs::hide('add_jitter')
+      shinyjs::hide('color_fill_radio')
+      shinyjs::hide('stat_method_radio')
+      shinyjs::hide('multiple_adj_radio')
+      shinyjs::hide('boxplot_stat_check')
+      shinyjs::hide('add_geoms_radio')
+      shinyjs::hide('size_slider')
+      shinyjs::hide('labels_check')
+      shinyjs::hide('faceting')
+      shinyjs::hide('pallete')
+      shinyjs::hide('corr_method_radio')
+      shinyjs::hide('reg_line_method_radio')
+      shinyjs::hide('margin_plot_radio')
+      shinyjs::hide("download_i_graph")
       
-      mtcars_radar <- mtcars %>% 
-        as_tibble(rownames = "group") %>% 
-        mutate_at(vars(-group), rescale) %>% 
-        tail(4) %>% 
-        select(1:10)
+      data <- data()
       
-      ggradar(mtcars_radar)
+      
+      print(data)
+      data <- data %>% mutate_at(vars(-rowname), rescale)
+      print(data)
+      
+      p <- ggradar(data)
+      
+      
     }
+    
+    ##############################################################################################################
+    ###########################################  END RADAR PLOT  #################################################
+    ##############################################################################################################
+    
     
   })
 

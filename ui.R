@@ -59,7 +59,7 @@ fluidPage(
       ),
      
       box(id='plot_type', width=800, 
-        selectInput('plot_type', 'Select plot type', c('Histogram', 'Boxplot', 'Violin plot',  'Barplot', "Lollipop plot", 'Lineplot', 'Scatter plot', 'Scatter margin plot', 'Pie plot', 'Donut plot', 'Contingency table', 'Tableplot', 'Genomeplot', 'Cluster plot', 'Independent t-test',  'Paired t-test', 'Correlation plot', 'Radar plot')),
+        selectInput('plot_type', 'Select plot type', c('Histogram', 'Boxplot', 'Violin plot',  'Barplot', "Lollipop plot", 'Lineplot', 'Scatter plot', 'Scatter margin plot', 'Pie plot', 'Donut plot', 'Contingency table', 'Genomeplot (demo)', 'Cluster plot', 'Paired boxplot (paired t-test)', 'Correlation plot', 'Radar plot')),
         uiOutput('x'),
         uiOutput('x2'),
         sliderInput('bins_slider', 'Number of bins', min = 1, max = 100, value = 30),
