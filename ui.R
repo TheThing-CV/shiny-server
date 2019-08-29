@@ -59,7 +59,7 @@ fluidPage(
       ),
      
       box(id='plot_type', width=800, 
-        selectInput('plot_type', 'Select plot type', c('Histogram', 'Boxplot', 'Violin plot',  'Barplot', "Lollipop plot", 'Lineplot', 'Scatter plot', 'Scatter margin plot', 'Pie plot', 'Donut plot', 'Contingency table', 'Genomeplot (demo)', 'Cluster plot', 'Paired boxplot (paired t-test)', 'Correlation plot', 'Radar plot')),
+        selectInput('plot_type', 'Select plot type', c('Histogram', 'Box plot', 'Paired box plot (paired t-test)', 'Violin plot',  'Bar plot', "Lollipop plot", 'Line plot', 'Scatter plot', 'Scatter margin plot', 'Correlation plot', 'Pie plot', 'Donut plot', 'Contingency table', 'Genomeplot (demo)', 'Cluster plot',  'Radar plot')),
         uiOutput('x'),
         uiOutput('x2'),
         sliderInput('bins_slider', 'Number of bins', min = 1, max = 100, value = 30),
@@ -120,7 +120,7 @@ fluidPage(
     tabsetPanel(type = 'tabs', id='tabs',
       tabPanel("Data / summary", value = 'data_check', DT::dataTableOutput('data'), verbatimTextOutput('summary'), verbatimTextOutput('summary2'), verbatimTextOutput('contingency_table')),
       tabPanel("Plots", value = 'data_plot', 
-               plotOutput('plot_1', height = 470),
+               plotOutput('plot_1', height = 570),
                box(id = 'plotly', width = 800, 
                    plotlyOutput("plot_2")
                ),

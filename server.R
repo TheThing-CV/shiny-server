@@ -123,6 +123,7 @@ function(input, output, session) {
       return()
     
     temp <- select_if(data(), is.numeric)
+    temp <- temp[vapply(temp, function(x) length(unique(x)) > 1, logical(1L))]
     round(stat.desc(temp, norm = T), 3) 
   })
   
@@ -163,7 +164,7 @@ function(input, output, session) {
   })
   
   observe({
-    if(input$plot_type == 'Barplot')
+    if(input$plot_type == 'Bar plot')
       updateRadioButtons(session, 'add_geoms_radio', inline = T, choices = c('Mean/SE' = 'mean_se', 'Mean/SD' = 'mean_sd', 'Mean/95CI' = 'mean_ci', 'None' = 'mean'))
     else if(input$plot_type == 'Violin plot')
       updateRadioButtons(session, 'add_geoms_radio', inline = T, choices = c('Boxplot' = 'boxplot', 'Points' = 'dotplot', 'Mean/SE' = 'mean_se', 'Mean/SD' = 'mean_sd', 'Mean/95CI' = 'mean_ci', 'None' = NA))
@@ -185,7 +186,7 @@ function(input, output, session) {
       return();
     
     
-    if(input$plot_type == 'Paired boxplot (paired t-test)' ||input$plot_type == 'Scatter margin plot' || input$plot_type == 'Scatter plot' || input$plot_type == 'Donut plot' || input$plot_type == 'Pie plot' || input$plot_type == 'Lollipop plot' || input$plot_type == 'Lineplot' || input$plot_type == 'Histogram' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
+    if(input$plot_type == 'Paired box plot (paired t-test)' ||input$plot_type == 'Scatter margin plot' || input$plot_type == 'Scatter plot' || input$plot_type == 'Donut plot' || input$plot_type == 'Pie plot' || input$plot_type == 'Lollipop plot' || input$plot_type == 'Line plot' || input$plot_type == 'Histogram' || input$plot_type == 'Box plot' || input$plot_type == 'Violin plot' || input$plot_type == 'Bar plot'){
       selectInput('x_var', 'Select first variable', choices = names(select_if(data(), is.numeric)))
       
     }
@@ -210,7 +211,7 @@ function(input, output, session) {
     
     if(input$plot_type == 'Histogram')
       selectInput('by_group', 'Select grouping variable', choices = c('None', names(select_if(data(), is.factor))))
-    else if (input$plot_type == 'Paired boxplot (paired t-test)' || input$plot_type == 'Scatter margin plot' || input$plot_type == 'Scatter plot' || input$plot_type == 'Donut plot' || input$plot_type == 'Pie plot' || input$plot_type == 'Lollipop plot' || input$plot_type == 'Lineplot' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot')
+    else if (input$plot_type == 'Paired box plot (paired t-test)' || input$plot_type == 'Scatter margin plot' || input$plot_type == 'Scatter plot' || input$plot_type == 'Donut plot' || input$plot_type == 'Pie plot' || input$plot_type == 'Lollipop plot' || input$plot_type == 'Line plot' || input$plot_type == 'Box plot' || input$plot_type == 'Violin plot' || input$plot_type == 'Bar plot')
       selectInput('x_group', 'Select grouping variable', choices = c('None',names(select_if(data(), is.factor))), selected =names(select_if(data(), is.factor))[1])
   })
   
@@ -225,7 +226,7 @@ function(input, output, session) {
   output$z <- renderUI({
     if(is.null(data()))
       return();
-    if (input$plot_type == 'Lollipop plot' || input$plot_type == 'Lineplot' || input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
+    if (input$plot_type == 'Lollipop plot' || input$plot_type == 'Line plot' || input$plot_type == 'Box plot' || input$plot_type == 'Violin plot' || input$plot_type == 'Bar plot'){
       selectInput('x_by_group', 'Select additional grouping variable', choices = c('None', names(select_if(data(), is.factor))))
     }
     
@@ -235,7 +236,7 @@ function(input, output, session) {
     if(is.null(data()))
       return();
     
-    if (input$plot_type == 'Boxplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
+    if (input$plot_type == 'Box plot' || input$plot_type == 'Violin plot' || input$plot_type == 'Bar plot'){
       selectInput('box_orientation', 'Select orientation', choices = c('vertical', 'horizontal'))
     }
   })
@@ -245,7 +246,7 @@ function(input, output, session) {
     if(is.null(data()))
       return();
     
-    if (input$plot_type == 'Boxplot' || input$plot_type == 'Lineplot' || input$plot_type == 'Violin plot' || input$plot_type == 'Barplot'){
+    if (input$plot_type == 'Box plot' || input$plot_type == 'Line plot' || input$plot_type == 'Violin plot' || input$plot_type == 'Bar plot'){
       selectInput('order_select', 'Select order', choices = levels(data()[[input$x_group]]), multiple = T, selected = levels(data()[[input$x_group]]))
     }
   })
@@ -264,7 +265,7 @@ function(input, output, session) {
     ###########################################   BOXPLOT  #######################################################
     ##############################################################################################################
     
-      if(input$plot_type == 'Boxplot') {
+      if(input$plot_type == 'Box plot') {
         shinyjs::hide('bins_slider')
         shinyjs::hide('custom_colour')
         shinyjs::hide('histogram_checks')
@@ -492,7 +493,7 @@ function(input, output, session) {
     ##############################################################################################################
     ###########################################   BARPLOT  #######################################################
     ##############################################################################################################
-    else if(input$plot_type == 'Barplot') {
+    else if(input$plot_type == 'Bar plot') {
       shinyjs::hide('bins_slider')
       shinyjs::hide('custom_colour')
       shinyjs::hide('histogram_checks')
@@ -623,7 +624,7 @@ function(input, output, session) {
     ##############################################################################################################
     
     
-    else if(input$plot_type == 'Lineplot') {
+    else if(input$plot_type == 'Line plot') {
       shinyjs::hide('bins_slider')
       shinyjs::hide('custom_colour')
       shinyjs::hide('histogram_checks')
@@ -866,7 +867,7 @@ function(input, output, session) {
     ##############################################################################################################
     
     
-    else if(input$plot_type == 'Paired boxplot (paired t-test)') {
+    else if(input$plot_type == 'Paired box plot (paired t-test)') {
       shinyjs::hide('bins_slider')
       shinyjs::hide('custom_colour')
       shinyjs::hide('histogram_checks')
@@ -954,7 +955,8 @@ function(input, output, session) {
       corr <- round(cor(temp), 1)
       p.mat <- cor_pmat(temp)
       g <- ggcorrplot(corr, hc.order = TRUE, type = "lower",
-                 lab = TRUE, lab_size = input$annotate_size, p.mat = p.mat, insig = "blank", ggtheme = ggplot2::theme_bw(), )  + rremove("grid")
+                 lab = TRUE, lab_size = input$annotate_size, p.mat = p.mat, insig = "blank", ggtheme = ggplot2::theme_bw(), )  + rremove("grid") + 
+        theme(axis.text.x=element_text(angle=90)) 
       
       g <- ggpar(g, font.legend = c(input$legend_slider, 'plain', 'black')) 
       } 
